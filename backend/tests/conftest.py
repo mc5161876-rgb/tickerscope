@@ -57,6 +57,17 @@ class FixtureFetcher:
         rec = self._rec(symbol)
         return rec["financials_quarterly" if freq == "quarterly" else "financials_annual"]
 
+    def fetch_quotes(self, symbols: list[str]) -> dict[str, dict[str, Any] | None]:
+        """One batched call (MAR-50): unknown symbols -> None, outage -> DataSourceError."""
+        self.calls.append(("quotes", ",".join(symbols), ""))
+        if self.fail:
+            raise DataSourceError("simulated Yahoo outage")
+        out: dict[str, dict[str, Any] | None] = {}
+        for s in symbols:
+            rec = self._data.get(s.upper())
+            out[s.upper()] = rec["ticker"] if rec else None
+        return out
+
 
 SAMPLE_COMPANIES = [
     {"ticker": "NVDA", "name": "NVIDIA CORP", "exchange": "NASDAQ", "cik": 1045810},

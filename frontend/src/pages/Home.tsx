@@ -1,13 +1,19 @@
-// Home (AC-1): wordmark + mark, large inline search, Recent chips.
+// Home (AC-1): wordmark + mark, large inline search, Recent chips — and (MAR-50 AC-2) the
+// My Stocks list under the search box, so Mario can react to both front doors.
 import { X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Banner } from "../components/Bits";
 import { Mark, Wordmark } from "../components/Mark";
 import { Search, avatarText } from "../components/Search";
+import { WatchlistTable } from "../components/WatchlistTable";
 import { pushRecent, removeRecent, useRecent } from "../lib/recent";
+import { useQuotes, useWatchlist } from "../lib/watchlist";
 
 export function Home() {
   const navigate = useNavigate();
   const [recent] = useRecent();
+  const wl = useWatchlist();
+  const q = useQuotes(wl.tickers);
 
   return (
     <div className="home">
@@ -27,6 +33,24 @@ export function Home() {
           }}
         />
       </div>
+
+      <section className="home-mystocks" aria-label="My Stocks">
+        <div className="section-head" style={{ marginBottom: 8 }}>
+          <div className="caps">My Stocks</div>
+          <Link to="/my-stocks" className="muted" style={{ fontSize: 12.5 }}>
+            Manage →
+          </Link>
+        </div>
+        {q.status === "error" && <Banner message="Data source unavailable — try again." onDismiss={() => {}} onRetry={q.reload} />}
+        {wl.loaded && wl.items.length === 0 ? (
+          <div className="empty-hint">No stocks yet — search above and tap Add.</div>
+        ) : (
+          <div className="card wl-card">
+            <WatchlistTable items={wl.items} quotes={q.quotes} quotesStatus={q.status} onMove={(a, b) => void wl.move(a, b)} compact />
+          </div>
+        )}
+      </section>
+
       <div className="recent" aria-label="Recent tickers">
         <div className="caps">Recent</div>
         {recent.length === 0 ? (

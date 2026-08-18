@@ -17,6 +17,7 @@ class Fetcher(Protocol):
     def fetch_profile_and_metrics(self, symbol: str) -> dict[str, Any]: ...
     def fetch_prices(self, symbol: str, range_key: str) -> dict[str, Any]: ...
     def fetch_financials(self, symbol: str, freq: str) -> dict[str, Any]: ...
+    def fetch_quotes(self, symbols: list[str]) -> dict[str, dict[str, Any] | None]: ...
 
 
 @dataclass
@@ -85,3 +86,50 @@ class TickerService:
             config.TTL_FINANCIALS,
             lambda: self.fetcher.fetch_financials(sym, freq),
         )
+
+    def quotes(self, symbols: list[str]) -> dict[str, Any]:
+        """Batched watchlist quotes (MAR-50 AC-2). Fresh `ticker` cache entries are reused (and
+        warmed for the ticker page); everything else goes to the fetcher in ONE batched call.
+        Returns {'quotes': {SYM: payload|None}, 'cache': 'hit'|'miss'|'partial', 'stale': [..]}.
+        """
+        syms: list[str] = []
+        for s in symbols:
+            t = (s or "").upper().strip()
+            if t and t not in syms:
+                syms.append(t)
+        out: dict[str, Any] = {}
+        stale_hits: dict[str, Any] = {}
+        missing: list[str] = []
+        for sym in syms:
+            hit = self.cache.get("ticker", sym, config.TTL_QUOTE)
+            if hit and hit.fresh:
+                out[sym] = hit.payload
+            else:
+                missing.append(sym)
+                if hit:
+                    stale_hits[sym] = hit.payload
+        status = "hit" if not missing else ("partial" if out else "miss")
+        stale: list[str] = []
+        if missing:
+            try:
+                fetched = self.fetcher.fetch_quotes(missing)
+            except DataSourceError as exc:
+                if not out and not stale_hits:
+                    raise UpstreamDown(str(exc), stale=None, stale_stored_at=None) from exc
+                fetched = {}
+                for sym in missing:
+                    if sym in stale_hits:
+                        out[sym] = stale_hits[sym]
+                        stale.append(sym)
+                    else:
+                        out[sym] = None
+            for sym, payload in fetched.items():
+                if payload is not None:
+                    self.cache.set("ticker", sym, payload)
+                    out[sym] = payload
+                elif sym in stale_hits:
+                    out[sym] = stale_hits[sym]
+                    stale.append(sym)
+                else:
+                    out[sym] = None
+        return {"quotes": {s: out.get(s) for s in syms}, "cache": status, "stale": stale}

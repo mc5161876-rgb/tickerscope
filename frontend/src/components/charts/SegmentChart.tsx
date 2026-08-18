@@ -142,7 +142,15 @@ function TotalTick(props: { cx?: number; cy?: number; payload?: Datum }) {
   return <line x1={cx - 9} x2={cx + 9} y1={cy} y2={cy} stroke="var(--text)" strokeWidth={2} strokeLinecap="round" />;
 }
 
-export function SegmentChart({ payload }: { payload: SegmentsPayload }) {
+export function SegmentChart({
+  payload,
+  detail = false,
+  hideTooltip = false,
+}: {
+  payload: SegmentsPayload;
+  detail?: boolean;
+  hideTooltip?: boolean;
+}) {
   const view = useMemo(() => cardView(payload), [payload]);
   const legend = useMemo(() => buildLegend(payload, view.kind), [payload, view.kind]);
   const legendMap = useMemo(() => new Map(legend.map((l) => [l.key, l])), [legend]);
@@ -192,21 +200,27 @@ export function SegmentChart({ payload }: { payload: SegmentsPayload }) {
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
             <XAxis
               dataKey="label"
-              tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+              tick={{ fill: "var(--chart-axis)", fontSize: detail ? 12 : 11 }}
               axisLine={false}
               tickLine={false}
-              interval={many ? "preserveStartEnd" : 0}
-              minTickGap={12}
+              interval={detail ? 0 : many ? "preserveStartEnd" : 0}
+              minTickGap={detail ? 4 : 12}
+              angle={detail && many ? -35 : 0}
+              height={detail && many ? 46 : 30}
+              textAnchor={detail && many ? "end" : "middle"}
             />
             <YAxis
               orientation="right"
-              width={54}
+              width={detail ? 62 : 54}
+              tickCount={detail ? 9 : 5}
               tickFormatter={yTick}
-              tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+              tick={{ fill: "var(--chart-axis)", fontSize: detail ? 12 : 11 }}
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<SegTooltip legend={legendMap} />} shared={false} cursor={{ fill: "var(--accent-soft)" }} isAnimationActive={false} />
+            {!hideTooltip && (
+              <Tooltip content={<SegTooltip legend={legendMap} />} shared={false} cursor={{ fill: "var(--accent-soft)" }} isAnimationActive={false} />
+            )}
             {legend.map((l) => (
               <Bar
                 key={l.key}

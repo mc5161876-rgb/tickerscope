@@ -10,7 +10,9 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { api, type SearchResult } from "../lib/api";
+import { looksLikeList } from "../lib/bulkImport";
 import { useRecent } from "../lib/recent";
+import { useWatchlist } from "../lib/watchlist";
 
 export interface SearchProps {
   mode: "inline" | "modal";
@@ -18,8 +20,14 @@ export interface SearchProps {
   placeholder?: string;
   onSelect: (ticker: string, name?: string) => void;
   onEscape?: () => void;
-  /** Show the Recent row when the query is empty (modal palette does; Home shows its own). */
+  /** Show the Recent (and My Stocks) rows when the query is empty (modal palette does; Home shows its own). */
   showRecentWhenEmpty?: boolean;
+  /** MAR-50: Enter/paste on a multi-ticker list ("AAPL, MSFT NASDAQ:GOOGL") calls this instead of onSelect. */
+  onBulk?: (text: string) => void;
+  /** MAR-50: keep the typed query after a selection (default false: clear it). */
+  keepQueryOnSelect?: boolean;
+  /** MAR-50: small trailing hint on each result row, e.g. "Add". */
+  selectLabel?: string;
   /** Test hook / injection */
   fetcher?: (q: string, signal: AbortSignal) => Promise<SearchResult[]>;
 }
@@ -42,6 +50,9 @@ export function Search({
   onSelect,
   onEscape,
   showRecentWhenEmpty = mode === "modal",
+  onBulk,
+  keepQueryOnSelect = false,
+  selectLabel,
   fetcher = defaultFetcher,
 }: SearchProps) {
   const [query, setQuery] = useState("");
@@ -50,6 +61,7 @@ export function Search({
   const [open, setOpen] = useState(mode === "modal");
   const [loading, setLoading] = useState(false);
   const [recent] = useRecent();
+  const { items: myStocks } = useWatchlist();
   const inputRef = useRef<HTMLInputElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId();
@@ -99,12 +111,25 @@ export function Search({
   const select = useCallback(
     (r: SearchResult | { ticker: string; name?: string }) => {
       onSelect(r.ticker.toUpperCase(), r.name);
+      if (!keepQueryOnSelect) {
+        setQuery("");
+        setResults([]);
+      }
+      setActive(-1);
+      if (mode === "inline") setOpen(false);
+    },
+    [onSelect, mode, keepQueryOnSelect],
+  );
+
+  const bulk = useCallback(
+    (text: string) => {
+      onBulk?.(text);
       setQuery("");
       setResults([]);
       setActive(-1);
       if (mode === "inline") setOpen(false);
     },
-    [onSelect, mode],
+    [onBulk, mode],
   );
 
   const exact = useMemo(() => {
@@ -123,7 +148,8 @@ export function Search({
     } else if (e.key === "Enter") {
       e.preventDefault();
       const q = query.trim();
-      if (active >= 0 && results[active]) select(results[active]);
+      if (onBulk && looksLikeList(q)) bulk(q);
+      else if (active >= 0 && results[active]) select(results[active]);
       else if (exact) select(exact);
       else if (results.length) select(results[0]);
       else if (q && TICKER_RE.test(q)) select({ ticker: q.toUpperCase().replace(/\./g, "-") });
@@ -138,8 +164,10 @@ export function Search({
     }
   };
 
-  const showList = open && query.trim().length > 0;
+  const isList = !!onBulk && looksLikeList(query);
+  const showList = open && query.trim().length > 0 && !isList;
   const showRecent = showRecentWhenEmpty && !query.trim() && recent.length > 0;
+  const showMyStocks = showRecentWhenEmpty && !query.trim() && myStocks.length > 0;
 
   return (
     <div className={`search search--${mode}`} ref={rootRef} role="search">
@@ -168,9 +196,22 @@ export function Search({
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
+          onPaste={(e) => {
+            if (!onBulk) return;
+            const text = e.clipboardData.getData("text");
+            if (looksLikeList(text)) {
+              e.preventDefault();
+              bulk(text);
+            }
+          }}
         />
+        {isList && open && (
+          <button type="button" className="search-bulk" onClick={() => bulk(query)}>
+            Add all ↵
+          </button>
+        )}
       </div>
-      {(showList || showRecent) && (
+      {(showList || showRecent || showMyStocks) && (
         <div className="search-results">
           {showList && (
             <>
@@ -191,6 +232,7 @@ export function Search({
                       <span className="ticker">{r.ticker}</span>
                       <span className="name">{r.name}</span>
                       <span className="exchange">{r.exchange ?? ""}</span>
+                      {selectLabel && <span className="select-hint">{selectLabel} ↵</span>}
                     </li>
                   ))}
                 </ul>
@@ -210,6 +252,19 @@ export function Search({
                     <span className="avatar">{avatarText(r.ticker)}</span>
                     <b>{r.ticker}</b>
                     {r.name && <span className="muted">{r.name}</span>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {showMyStocks && (
+            <>
+              <div className="search-section caps">My Stocks</div>
+              <div className="search-recent" data-section="my-stocks">
+                {myStocks.map((s) => (
+                  <button key={s.ticker} type="button" className="chip" onClick={() => select({ ticker: s.ticker })}>
+                    <span className="avatar">{avatarText(s.ticker)}</span>
+                    <b>{s.ticker}</b>
                   </button>
                 ))}
               </div>

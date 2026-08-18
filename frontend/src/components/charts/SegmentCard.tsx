@@ -1,21 +1,74 @@
 // "Revenue by Segment" card (MAR-49 AC-4, AC-5, AC-9): chart + legend + honest state messaging.
+// MAR-50: `segmentMeta` + `SegmentBody` are shared with the fullscreen modal and the PNG export.
 import { useMemo } from "react";
-import type { Freq, SegmentsPayload } from "../../lib/api";
+import type { CoverageState, Freq, SegmentsPayload, ViewKind } from "../../lib/api";
 import { fmtCurrency } from "../../lib/format";
 import type { Resource } from "../../lib/useResource";
 import { Sk } from "../Bits";
 import { ChartCard, ChartEmpty } from "./ChartCard";
-import { SegmentChart, SegmentLegend, buildLegend, cardView } from "./SegmentChart";
+import { SegmentChart, SegmentLegend, buildLegend, cardView, type LegendItem } from "./SegmentChart";
 
-export function SegmentCard({ res, freq }: { res: Resource<SegmentsPayload>; freq: Freq }) {
+export interface SegmentMeta {
+  title: string;
+  subtitle: string;
+  view: { kind: ViewKind; label: string };
+  legend: LegendItem[];
+  latest: SegmentsPayload["periods"][number] | undefined;
+  drawable: boolean;
+}
+
+export function segmentMeta(payload: SegmentsPayload, freq: Freq): SegmentMeta {
+  const view = cardView(payload);
+  const legend = buildLegend(payload, view.kind);
+  const latest = [...payload.periods].reverse().find((p) => p.render_mode !== "unavailable") ?? payload.periods.at(-1);
+  const title = view.kind !== "business" ? view.label : "Revenue by Segment";
+  let subtitle = freq === "quarterly" ? "Filed 10-Q quarters (Q4 needs the annual filing)" : "From 10-K filings, per fiscal year";
+  if (view.kind !== "business") subtitle = `Reconciled filed breakdown${freq === "quarterly" ? ", by quarter" : ", per fiscal year"} - see note`;
+  const drawable = payload.periods.some((p) => p.render_mode === "stacked" || p.alternative || p.consolidated_total !== null);
+  return { title, subtitle, view, legend, latest, drawable };
+}
+
+/** State banner + chart (+ legend). Used by the card, fullscreen and export. */
+export function SegmentBody({
+  payload,
+  meta,
+  detail = false,
+  hideTooltip = false,
+  withLegend = false,
+}: {
+  payload: SegmentsPayload;
+  meta: SegmentMeta;
+  detail?: boolean;
+  hideTooltip?: boolean;
+  withLegend?: boolean;
+}) {
+  const stateLine = meta.latest
+    ? stateBanner(meta.latest.coverage_state, meta.latest.message, meta.latest.consolidated_total, meta.latest.label, meta.view.kind)
+    : null;
+  return (
+    <>
+      {stateLine}
+      {meta.drawable ? <SegmentChart payload={payload} detail={detail} hideTooltip={hideTooltip} /> : <ChartEmpty>Not available</ChartEmpty>}
+      {withLegend && <SegmentLegend items={meta.legend} resegmentations={payload.resegmentations} periods={payload.periods} />}
+    </>
+  );
+}
+
+export function SegmentCard({
+  res,
+  freq,
+  onExpand,
+  onSave,
+  saving,
+}: {
+  res: Resource<SegmentsPayload>;
+  freq: Freq;
+  onExpand?: () => void;
+  onSave?: () => void;
+  saving?: boolean;
+}) {
   const payload = res.data;
-  const view = useMemo(() => (payload ? cardView(payload) : null), [payload]);
-  const legend = useMemo(() => (payload && view ? buildLegend(payload, view.kind) : []), [payload, view]);
-  const latest = payload ? [...payload.periods].reverse().find((p) => p.render_mode !== "unavailable") ?? payload.periods.at(-1) : undefined;
-
-  const title = view && view.kind !== "business" ? view.label : "Revenue by Segment";
-  let subtitle: string | null = freq === "quarterly" ? "Filed 10-Q quarters (Q4 needs the annual filing)" : "From 10-K filings, per fiscal year";
-  if (view && view.kind !== "business") subtitle = `Reconciled filed breakdown${freq === "quarterly" ? ", by quarter" : ", per fiscal year"} - see note`;
+  const meta = useMemo(() => (payload && payload.status === "ok" ? segmentMeta(payload, freq) : null), [payload, freq]);
 
   // ---- states -----------------------------------------------------------------
   if (res.status === "loading" && !payload) {
@@ -42,42 +95,31 @@ export function SegmentCard({ res, freq }: { res: Resource<SegmentsPayload>; fre
       </ChartCard>
     );
   }
-  if (payload.status !== "ok" || payload.periods.length === 0) {
+  if (payload.status !== "ok" || payload.periods.length === 0 || !meta) {
     return (
       <ChartCard title="Revenue by Segment" subtitle="SEC EDGAR" tall>
-        <ChartEmpty>{payload.status === "error" ? "Not available" : "Not available"}</ChartEmpty>
+        <ChartEmpty>Not available</ChartEmpty>
       </ChartCard>
     );
   }
 
-  const stateLine = latest ? stateBanner(latest.coverage_state, latest.message, latest.consolidated_total, latest.label, view?.kind) : null;
-  const drawable = payload.periods.some((p) => p.render_mode === "stacked" || p.alternative);
-
   return (
     <ChartCard
-      title={title}
-      subtitle={subtitle}
+      title={meta.title}
+      subtitle={meta.subtitle}
       tall
       footRight={payload.filings_read.length ? `${payload.filings_read.length} filings read` : null}
-      below={<SegmentLegend items={legend} resegmentations={payload.resegmentations} periods={payload.periods} />}
+      below={<SegmentLegend items={meta.legend} resegmentations={payload.resegmentations} periods={payload.periods} />}
+      onExpand={meta.drawable ? onExpand : undefined}
+      onSave={meta.drawable ? onSave : undefined}
+      saving={saving}
     >
-      {stateLine}
-      {drawable || payload.periods.some((p) => p.consolidated_total !== null) ? (
-        <SegmentChart payload={payload} />
-      ) : (
-        <ChartEmpty>Not available</ChartEmpty>
-      )}
+      <SegmentBody payload={payload} meta={meta} />
     </ChartCard>
   );
 }
 
-function stateBanner(
-  state: SegmentsPayload["periods"][number]["coverage_state"],
-  message: string | undefined,
-  total: number | null,
-  label: string,
-  kind: string | undefined,
-) {
+function stateBanner(state: CoverageState, message: string | undefined, total: number | null, label: string, kind: string | undefined) {
   switch (state) {
     case "single_segment":
       return (

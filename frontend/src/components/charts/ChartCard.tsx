@@ -1,5 +1,6 @@
-// Card chrome shared by the three Insights charts (AC-11): title, actions, watermark footer,
-// expand icon present-but-disabled (fullscreen ships in issue #3).
+// Card chrome shared by the Insights charts (AC-11): title, actions, watermark footer,
+// expand icon present-but-disabled (fullscreen ships in issue #3). `below` renders under the
+// chart body (legends); `tall` gives the segment card a little more room.
 import { Maximize2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Mark } from "../Mark";
@@ -10,12 +11,16 @@ export function ChartCard({
   controls,
   children,
   footRight,
+  below,
+  tall = false,
 }: {
   title: string;
   subtitle?: string | null;
   controls?: ReactNode;
   children: ReactNode;
   footRight?: ReactNode;
+  below?: ReactNode;
+  tall?: boolean;
 }) {
   return (
     <section className="card chart-card" aria-label={title}>
@@ -31,7 +36,8 @@ export function ChartCard({
           </button>
         </div>
       </div>
-      <div className="chart-body">{children}</div>
+      <div className={`chart-body${tall ? " tall" : ""}`}>{children}</div>
+      {below}
       <div className="chart-foot">
         <span className="watermark">
           <Mark size={14} /> TickerScope

@@ -80,8 +80,9 @@ export function Shell({
             {health?.yfinance_version ? <span className="faint"> {health.yfinance_version}</span> : null}
           </div>
           <div>
-            <span className="dot" style={{ background: "var(--text-faint)" }} />
-            SEC index {health ? (health.search_index_size > 0 ? "✓" : "✕") : "…"}
+            <span className={`dot${health && health.sec_configured ? "" : " off"}`} />
+            SEC EDGAR {health ? (health.sec_configured ? "✓" : "✕") : "…"}
+            {health && !health.sec_configured ? <span className="faint"> not configured</span> : null}
           </div>
         </div>
       </aside>

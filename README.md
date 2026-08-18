@@ -26,17 +26,20 @@ Ports: API `127.0.0.1:8790`, Vite dev `127.0.0.1:5190`. In production FastAPI se
 cd C:\rex\tickerscope
 uv sync          # creates .venv with Python 3.12 (uses uv's managed interpreter, never the PATH python)
 npm install      # root deps + frontend deps (postinstall)
+copy .env.example .env   # then set SEC_USER_AGENT (contact string, not a secret) - needed for SEC history + segments
 ```
 
 ## Develop
 
 ```powershell
-npm run dev      # backend (uvicorn --reload on 8790) + Vite (5190) concurrently
+npm run dev      # backend (uvicorn --reload on 8790) + Vite (5190) via scripts/dev.mjs
 ```
 
 Open <http://127.0.0.1:5190>. Vite proxies `/api/*` to the backend.
 
-Individually: `npm run dev:api`, `npm run dev:web`.
+Individually: `npm run dev:api`, `npm run dev:web`. (`scripts/dev.mjs` runs the API detached on
+its own console: uvicorn's Windows reloader broadcasts a Ctrl+C on every change, which used to
+kill both processes under `concurrently`.)
 
 ## Build & run (production, one command)
 
@@ -61,7 +64,18 @@ npm run check          # tsc --noEmit
 ```
 
 Fixtures for AAPL / NVDA / JPM live in `backend/tests/fixtures/`. Re-record with network:
-`uv run python scripts/record_fixtures.py`.
+`uv run python scripts/record_fixtures.py`. SEC fixtures (trimmed companyfacts for
+AMZN/MSFT/JPM/NFLX) live in `backend/tests/sec/fixtures/`.
+
+Hostile-corpus regression (17 `AS_FILED` / 3 `NEEDS_REVIEW` / 0 errors across 20 issuers): runs
+offline as `backend/tests/sec/test_corpus.py` when the durable SEC cache holds the corpus; populate
+once with network via `$env:PYTHONPATH="backend"; uv run python -m tickerscope.sec.extractor`.
+
+Browser review harness (headless Edge over CDP; the Browser pane can't reach localhost here):
+`uv run python scripts/smoke_cdp.py` against a running server (`TICKERSCOPE_BASE` to override).
+It regenerates `docs/screenshots/` and asserts the search palette, not-found state, explainers,
+theme toggle, phone layout, and (when `SEC_USER_AGENT` is set) the segment card states for
+AMZN / NFLX / INTC / UNH / JPM.
 
 ## API
 
@@ -71,22 +85,41 @@ Fixtures for AAPL / NVDA / JPM live in `backend/tests/fixtures/`. Re-record with
 | `GET /api/search?q=` | `{query, results:[{ticker,name,exchange,cik}]}` from the SEC index (24h cache) |
 | `GET /api/ticker/{symbol}` | `{symbol, profile, quote, metrics{...}, as_of, fetched_at}` (15-min cache) |
 | `GET /api/ticker/{symbol}/prices?range=1y\|5y\|10y\|max` | `{points:[{date,close}], sampled}` (6h cache) |
-| `GET /api/ticker/{symbol}/financials?freq=annual\|quarterly` | `{revenue:[{period_end,label,value}], ebitda:[...], ebitda_method}` (6h cache) |
+| `GET /api/ticker/{symbol}/financials?freq=annual\|quarterly` | up to 10 fiscal years / 40 quarters: `{revenue:[{period_end,label,value,source,accession,filed,form,method}], ebitda:[...], ebitda_method, sec:{status}}` — SEC companyfacts wins per period, yfinance fills gaps (marked) |
+| `GET /api/ticker/{symbol}/segments?freq=annual\|quarterly` | Revenue by Segment contract per period: `coverage_state`, `render_mode`, `view`, `rows[]`, `consolidation_bridge[]`, totals, `alternative?`, `message?`, `provenance{form,accession,filed,axis,cik,edgar_url}`, plus `legend`, `resegmentations`, `filings_read` |
 | `GET /api/metrics` | the shared registry |
 
 Every numeric field is nullable; keys are snake_case. Responses carry `x-cache: hit|miss|stale`.
 Unknown ticker → `404 {error:"not_found"}`. Yahoo failure → `503 {error:"data_source_unavailable", stale?, stale_as_of?}`
 (the UI shows a dismissible banner and keeps the last good payload). Set `TICKERSCOPE_FORCE_FAIL=1`
-to exercise that path locally.
+to exercise that path locally. `/segments` without `SEC_USER_AGENT` → `503 {status:"not_configured"}`.
 
-Env: `TICKERSCOPE_DATA_DIR` (cache location, default `./data`), `TICKERSCOPE_FORCE_FAIL`,
-`TICKERSCOPE_SEC_USER_AGENT`, `TICKERSCOPE_HOST`, `TICKERSCOPE_PORT`.
+### SEC EDGAR (MAR-49)
+
+`backend/tickerscope/sec/` — `client.py` (identifying User-Agent, ≤ 8 req/s, durable cache under
+`data/sec-cache/`: immutable `Archives/edgar/data` URLs cached forever, submissions/companyfacts 6h),
+`companyfacts.py` (Revenue `Revenues → RevenueFromContractWithCustomerExcludingAssessedTax → SalesRevenueNet`,
+EBITDA *calculated* = `OperatingIncomeLoss` + `DepreciationDepletionAndAmortization`/`DepreciationAndAmortization`,
+newest filing wins per period), `extractor.py` (the traderscope linkbase-aware segment extractor,
+ported; per-filing/per-period API added), `segments.py` (walks 10 years of 10-Ks / 5 years of 10-Qs,
+prefers the latest filing per period, emits the coverage-state contract, detects re-segmentation).
+Diagnostics land in `data/sec-diagnostics/`.
+
+Coverage states → UI: `as_filed` / `as_filed_with_bridge` stacked with a consolidated tick;
+`single_segment` "Reports as one segment"; `needs_review` withheld with the reconciliation gap;
+`withheld_alternative` draws the reconciled alternative under its real title (e.g. "Revenue by
+Region"); `unavailable` "Not available". A geography/product view is never passed off as segments.
+
+Env: `SEC_USER_AGENT` (in `.env`), `TICKERSCOPE_DATA_DIR` (cache location, default `./data`),
+`TICKERSCOPE_FORCE_FAIL`, `TICKERSCOPE_SEC_USER_AGENT` (ticker-list download only),
+`TICKERSCOPE_HOST`, `TICKERSCOPE_PORT`.
 
 ## Layout
 
 ```
 backend/tickerscope/   main.py (FastAPI) · yahoo.py (only yfinance import) · search.py · cache.py · service.py · metrics.py · config.py
-backend/tests/         pytest + fixtures/
+backend/tickerscope/sec/  client.py · companyfacts.py · extractor.py · segments.py · service.py
+backend/tests/         pytest + fixtures/ · tests/sec/ (ported extractor + cache tests, companyfacts, segments, api, corpus)
 shared/metrics.json    metric registry + explainer copy
 frontend/src/          App.tsx · pages/ · components/ · components/charts/ · lib/ · styles/ · __tests__/
 scripts/               start.ps1 · record_fixtures.py · probe_yf.py
@@ -95,8 +128,9 @@ docs/screenshots/      review screenshots (1280×800, 390×844)
 
 ## Not in this build (see later issues)
 
-Revenue by Segment / SEC 10-year history (MAR-49), My Stocks watchlist + fullscreen charts +
-share-card export (MAR-50), Electron shell + installer (MAR-51). No auth, billing, brokerage,
+My Stocks watchlist + fullscreen charts + share-card export (MAR-50), Electron shell + installer
+(MAR-51). Restatement-aware multi-year stitching (Q4 segment quarters, restated comparatives) is
+deliberately out of scope: each period shows the newest filed value. No auth, billing, brokerage,
 alerts, news, screener, or AI commentary — by design.
 
 Data disclaimer: yfinance is unofficial and delayed. Not investment advice.

@@ -15,6 +15,9 @@ from . import __version__, config, yahoo
 from .cache import DiskCache
 from .metrics import registry
 from .search import SearchIndex
+from .sec.client import sec_configured, sec_user_agent
+from .sec.companyfacts import merge_with_yfinance
+from .sec.service import SecService
 from .service import TickerService, UpstreamDown
 from .yahoo import NotFoundError
 
@@ -30,10 +33,19 @@ def create_app(
     fetcher: Any = yahoo,
     search_index: SearchIndex | None = None,
     load_index_on_startup: bool = True,
+    sec_service: SecService | None = None,
 ) -> FastAPI:
     cache = cache or DiskCache(config.cache_dir())
     index = search_index or SearchIndex(cache)
     service = TickerService(cache, fetcher)
+
+    def resolve_cik(symbol: str) -> str | None:
+        if index.size == 0:
+            index.load()
+        c = index.lookup(symbol)
+        return str(c.cik).zfill(10) if c and c.cik else None
+
+    sec = sec_service or SecService(cache, resolve_cik)
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -49,6 +61,7 @@ def create_app(
     app.state.cache = cache
     app.state.search_index = index
     app.state.service = service
+    app.state.sec = sec
 
     # ------------------------------------------------------------------ helpers
     def _json(payload: Any, cache_status: str, status_code: int = 200) -> JSONResponse:
@@ -74,12 +87,16 @@ def create_app(
     # ------------------------------------------------------------------ routes
     @app.get("/api/health")
     def health() -> dict[str, Any]:
+        ua = sec_user_agent()
         return {
             "status": "ok",
             "data_mode": "force_fail" if config.force_fail() else "live",
             "yfinance_version": yahoo.yfinance_version(),
             "search_index_size": index.size,
             "version": __version__,
+            "sec_configured": sec_configured(),
+            # contact string, not a secret - but only echo whether it is set + a hint
+            "sec_user_agent_hint": (ua[:24] + "…") if ua and len(ua) > 24 else ua,
         }
 
     @app.get("/api/metrics")
@@ -122,17 +139,87 @@ def create_app(
 
     @app.get("/api/ticker/{symbol}/financials")
     def financials(symbol: str, freq: str = Query("annual")) -> JSONResponse:
+        """yfinance financials merged with SEC companyfacts history (MAR-49 AC-1).
+
+        SEC wins per period; yfinance fills the gaps (source marked). SEC not configured /
+        not a filer / SEC down -> yfinance only, with `sec.status` explaining why.
+        """
         fq = freq.lower()
         if fq not in VALID_FREQS:
             raise HTTPException(400, f"freq must be one of {', '.join(VALID_FREQS)}")
         sym = symbol.upper().strip()
+        yf_payload: dict[str, Any] | None = None
+        yf_error: UpstreamDown | None = None
+        cache_status = "miss"
         try:
             res = service.financials(sym, fq)
+            yf_payload, cache_status = res.payload, res.cache
         except NotFoundError:
             return _not_found(sym)
         except UpstreamDown as exc:
-            return _upstream_down(exc)
-        return _json(res.payload, res.cache)
+            yf_error = exc
+
+        sec_series = sec.series(sym, fq)
+        sec_ok = sec_series.get("status") == "ok" and (
+            sec_series["revenue"] or sec_series["ebitda"]
+        )
+        if yf_payload is None and not sec_ok:
+            assert yf_error is not None
+            return _upstream_down(yf_error)
+
+        base = yf_payload or {
+            "symbol": sym,
+            "freq": fq,
+            "currency": None,
+            "revenue": [],
+            "ebitda": [],
+            "ebitda_method": None,
+        }
+        yf_rev = [
+            {**p, "source": "yfinance", "method": "as_filed"} for p in base.get("revenue", [])
+        ]
+        yf_method = "calculated" if base.get("ebitda_method") == "calculated" else "as_filed"
+        yf_ebitda = [
+            {**p, "source": "yfinance", "method": yf_method} for p in base.get("ebitda", [])
+        ]
+        if sec_ok:
+            revenue = merge_with_yfinance(sec_series["revenue"], yf_rev, "as_filed")
+            ebitda = merge_with_yfinance(sec_series["ebitda"], yf_ebitda, yf_method)
+            method = "calculated" if sec_series["ebitda"] else base.get("ebitda_method")
+        else:
+            revenue, ebitda, method = yf_rev, yf_ebitda, base.get("ebitda_method")
+        limit = config.SEC_ANNUAL_YEARS if fq == "annual" else config.SEC_QUARTERS
+        payload = {
+            **base,
+            "revenue": revenue[-limit:],
+            "ebitda": ebitda[-limit:],
+            "ebitda_method": method,
+            "sec": {
+                "status": sec_series.get("status"),
+                "message": sec_series.get("message"),
+                "cik": sec_series.get("cik"),
+            },
+        }
+        if yf_error is not None:
+            payload["warnings"] = ["yfinance unavailable; showing SEC history only"]
+        return _json(payload, cache_status)
+
+    @app.get("/api/ticker/{symbol}/segments")
+    def segments(symbol: str, freq: str = Query("annual")) -> JSONResponse:
+        """Revenue by Segment contract per period (MAR-49 AC-3)."""
+        fq = freq.lower()
+        if fq not in VALID_FREQS:
+            raise HTTPException(400, f"freq must be one of {', '.join(VALID_FREQS)}")
+        sym = symbol.upper().strip()
+        env = sec.segments(sym, fq)
+        status = env.get("status")
+        if status == "not_configured":
+            return _json(env, "miss", status_code=503)
+        if status == "not_found":
+            return _json(env, "miss", status_code=404)
+        if status == "error":
+            return _json(env, "miss", status_code=503)
+        return _json(env, "hit" if env.get("generated_at") else "miss")
 
     # ------------------------------------------------------------------ static (prod)
     dist = config.FRONTEND_DIST

@@ -23,6 +23,13 @@ from pathlib import Path
 
 import websockets
 
+# Windows consoles default to cp1252; tooltips contain arrows / dashes
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
+    except (AttributeError, ValueError):
+        pass
+
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "docs" / "screenshots"
 BASE = os.environ.get("TICKERSCOPE_BASE", "http://127.0.0.1:8790")
@@ -145,6 +152,151 @@ LAYOUT_JS = """
 """
 
 
+SEG_JS = """
+(() => {
+  const c = document.querySelector('.chart-card[aria-label="Revenue by Segment"], .chart-card[aria-label="Revenue by Region"], .chart-card[aria-label="Revenue by Product or Service"]');
+  if (!c) return null;
+  const rev = document.querySelector('.chart-card[aria-label="Revenue"]');
+  return {
+    title: c.getAttribute('aria-label'),
+    text: c.innerText.replace(/\\s+/g, ' ').slice(0, 260),
+    state: c.querySelector('.seg-state')?.getAttribute('data-state') ?? null,
+    bars: c.querySelectorAll('.recharts-bar-rectangle path').length,
+    ticks: c.querySelectorAll('.recharts-line-dots line').length,
+    legend: [...c.querySelectorAll('.seg-key')].map(k => k.textContent.trim()),
+    reseg: c.querySelectorAll('.recharts-reference-line').length,
+    resegNote: c.querySelector('.reseg-note')?.textContent ?? null,
+    revenueTicks: rev ? [...rev.querySelectorAll('.recharts-cartesian-axis-tick-value')].map(t => t.textContent).filter(t => /^FY|^Q/.test(t)) : [],
+    revSub: rev?.querySelector('.chart-sub')?.textContent ?? null,
+    grid2x2: (() => { const g = document.querySelector('.chart-grid'); return g ? getComputedStyle(g).gridTemplateColumns.split(' ').length : 0; })(),
+    footnote: !!document.querySelector('.footnote'),
+  };
+})()
+"""
+
+
+async def wait_segments(cdp: CDP, timeout: float = 90.0) -> dict | None:
+    """First open of a ticker can take a while (multiple SEC fetches, AC-9)."""
+    end = time.time() + timeout
+    while time.time() < end:
+        info = await cdp.eval(SEG_JS)
+        if info and "Reading SEC filings" not in info["text"]:
+            return info
+        await asyncio.sleep(1.5)
+    return await cdp.eval(SEG_JS)
+
+
+async def sec_checks(cdp: CDP, failures: list[str]) -> None:
+    print("== MAR-49 SEC checks")
+    await cdp.viewport(1280, 800)
+
+    # AMZN: stacked, ~10 fiscal years, legend, revenue chart spans SEC history
+    await cdp.goto(f"{BASE}/t/AMZN", settle=3)
+    info = await wait_segments(cdp)
+    print(
+        "AMZN:",
+        json.dumps(
+            {
+                k: info[k]
+                for k in (
+                    "title",
+                    "state",
+                    "bars",
+                    "ticks",
+                    "legend",
+                    "revenueTicks",
+                    "grid2x2",
+                    "footnote",
+                )
+            }
+        )
+        if info
+        else None,
+    )
+    if not info or info["bars"] < 24 or info["ticks"] < 8:
+        failures.append(f"AMZN segment card should stack ~10 years (bars={info and info['bars']})")
+    if not info or len(info["revenueTicks"]) < 9:
+        failures.append(
+            f"AMZN Revenue chart should span >=9 fiscal years, got {info and info['revenueTicks']}"
+        )
+    if info and info["footnote"]:
+        failures.append("AC-15 footnote should be removed")
+    if info and info["grid2x2"] != 2:
+        failures.append(f"Insights grid should be 2 columns at 1280 (got {info['grid2x2']})")
+    await cdp.eval(
+        "document.querySelector('.chart-grid').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"
+    )
+    await asyncio.sleep(0.4)
+    await cdp.shot(SHOTS / "segments-AMZN-1280x800.png")
+    # hover a segment bar -> provenance tooltip
+    await cdp.eval(
+        """(() => { const p = document.querySelector('.chart-card[aria-label="Revenue by Segment"] .recharts-bar-rectangle path'); if (!p) return; const r = p.getBoundingClientRect(); const ev = new MouseEvent('mousemove', {clientX: r.left + r.width/2, clientY: r.top + r.height/2, bubbles: true}); p.dispatchEvent(ev); })()"""
+    )
+    await asyncio.sleep(0.4)
+    tt = await cdp.eval(
+        "document.querySelector('.chart-card[aria-label=\"Revenue by Segment\"] .tt')?.innerText ?? null"
+    )
+    print("AMZN tooltip:", (tt or "").replace("\n", " | ")[:200])
+    if not tt or "10-K" not in tt or "% of stack" not in tt:
+        failures.append("segment tooltip should show % of stack and 10-K provenance")
+    await cdp.shot(SHOTS / "segments-AMZN-tooltip.png")
+
+    # NFLX: single segment
+    await cdp.goto(f"{BASE}/t/NFLX", settle=3)
+    info = await wait_segments(cdp)
+    print("NFLX:", json.dumps({k: info[k] for k in ("state", "bars", "text")}) if info else None)
+    if (
+        not info
+        or info["state"] != "single_segment"
+        or "Reports as one segment" not in info["text"]
+    ):
+        failures.append("NFLX should show 'Reports as one segment'")
+    await cdp.eval(
+        "document.querySelector('.chart-grid').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"
+    )
+    await asyncio.sleep(0.4)
+    await cdp.shot(SHOTS / "segments-NFLX-1280x800.png")
+
+    # INTC: withheld -> Revenue by Region alternative
+    await cdp.goto(f"{BASE}/t/INTC", settle=3)
+    info = await wait_segments(cdp)
+    print(
+        "INTC:",
+        json.dumps({k: info[k] for k in ("title", "state", "bars", "legend")}) if info else None,
+    )
+    if not info or info["title"] != "Revenue by Region" or info["state"] != "withheld_alternative":
+        failures.append("INTC should draw 'Revenue by Region' with the business view withheld")
+    await cdp.eval(
+        "document.querySelector('.chart-grid').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"
+    )
+    await asyncio.sleep(0.4)
+    await cdp.shot(SHOTS / "segments-INTC-1280x800.png")
+
+    # UNH: needs review
+    await cdp.goto(f"{BASE}/t/UNH", settle=3)
+    info = await wait_segments(cdp)
+    print("UNH:", json.dumps({k: info[k] for k in ("state", "text")}) if info else None)
+    if not info or info["state"] != "needs_review" or "withheld" not in info["text"].lower():
+        failures.append("UNH should show the needs_review withheld message")
+
+    # JPM: bridge + real re-segmentation divider
+    await cdp.goto(f"{BASE}/t/JPM", settle=3)
+    info = await wait_segments(cdp)
+    print(
+        "JPM:",
+        json.dumps({k: info[k] for k in ("state", "bars", "reseg", "resegNote", "legend")})
+        if info
+        else None,
+    )
+    if not info or info["reseg"] < 1 or not info["resegNote"]:
+        failures.append("JPM should show a re-segmentation divider + note")
+    await cdp.eval(
+        "document.querySelector('.chart-grid').scrollIntoView({block:'start'}); window.scrollBy(0,-70)"
+    )
+    await asyncio.sleep(0.4)
+    await cdp.shot(SHOTS / "segments-JPM-1280x800.png")
+
+
 async def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--eval", dest="expr")
@@ -204,6 +356,8 @@ async def main(argv: list[str]) -> int:
             lay = await cdp.eval(LAYOUT_JS)
             print(json.dumps(lay, indent=1))
             for c in lay["cards"]:
+                if c["svg"] is None and c["title"] not in ("Stock Price", "Revenue", "EBITDA"):
+                    continue  # segment card may still be reading SEC filings / not drawable
                 if c["svg"] is None or c["body"] is None or c["svg"] > c["body"] + 2:
                     failures.append(
                         f"chart '{c['title']}' svg {c['svg']} wider than body {c['body']}"
@@ -287,6 +441,13 @@ async def main(argv: list[str]) -> int:
             await cdp.shot(SHOTS / "ticker-JPM-light-1280x800.png")
             await cdp.click(".topbar .switch")
 
+            # ---- MAR-49: SEC history + Revenue by Segment (only when SEC is configured)
+            health = json.loads(await cdp.eval("fetch('/api/health').then(r=>r.text())"))
+            if health.get("sec_configured"):
+                await sec_checks(cdp, failures)
+            else:
+                print("(SEC_USER_AGENT not set: skipping segment checks)")
+
             # ---- home
             await cdp.goto(f"{BASE}/", settle=2)
             await cdp.shot(SHOTS / "home-1280x800.png")
@@ -300,6 +461,8 @@ async def main(argv: list[str]) -> int:
             lay = await cdp.eval(LAYOUT_JS)
             print(json.dumps({k: lay[k] for k in ("viewport", "cards")}, indent=1))
             for c in lay["cards"]:
+                if c["svg"] is None and c["title"] not in ("Stock Price", "Revenue", "EBITDA"):
+                    continue
                 if c["svg"] is None or c["svg"] > (c["body"] or 0) + 2:
                     failures.append(
                         f"phone chart '{c['title']}' svg {c['svg']} wider than body {c['body']}"

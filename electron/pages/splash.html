@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TickerScope</title>
+    <link rel="stylesheet" href="shell.css" />
+  </head>
+  <body>
+    <div class="panel" style="align-items: center; text-align: center; gap: 18px">
+      <img class="mark" src="../../assets/icon-256.png" alt="" style="width: 64px; height: 64px" />
+      <div class="brand">Ticker<span>Scope</span></div>
+      <div class="spinner" aria-hidden="true"></div>
+      <h1 id="title" style="font-size: 18px">Starting TickerScope server…</h1>
+      <p id="detail" class="status">Checking <code id="url"></code></p>
+    </div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      document.getElementById("url").textContent = q.get("url") || "";
+      window.addEventListener("message", (e) => {
+        if (e.data?.detail) document.getElementById("detail").textContent = e.data.detail;
+      });
+    </script>
+  </body>
+</html>

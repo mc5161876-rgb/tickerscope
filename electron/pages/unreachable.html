@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TickerScope — can't reach server</title>
+    <link rel="stylesheet" href="shell.css" />
+  </head>
+  <body>
+    <div class="panel">
+      <div class="brand"><img class="mark" src="../../assets/icon-256.png" alt="" /> Ticker<span>Scope</span></div>
+      <h1>Can't reach <span id="url" class="mono"></span></h1>
+      <p id="why" class="muted"></p>
+      <div class="card">
+        <p>
+          <strong>Local mode</strong> starts the bundled server automatically from your repo checkout (needs
+          <code>uv</code> and the TickerScope folder). <strong>Remote mode</strong> (any non-localhost address) never starts
+          anything — the server has to be running on that machine and reachable on the tailnet.
+        </p>
+        <div class="row">
+          <button class="primary" id="retry">Retry</button>
+          <button id="settings">Settings</button>
+          <button id="quit">Quit</button>
+        </div>
+        <p id="log" class="status mono"></p>
+      </div>
+    </div>
+    <script>
+      const q = new URLSearchParams(location.search);
+      document.getElementById("url").textContent = q.get("url") || "";
+      document.getElementById("why").textContent = q.get("why") || "";
+      document.getElementById("log").textContent = q.get("log") || "";
+      document.getElementById("retry").onclick = () => window.tickerscopeShell?.retry();
+      document.getElementById("settings").onclick = () => window.tickerscopeShell?.openSettings();
+      document.getElementById("quit").onclick = () => window.tickerscopeShell?.quit();
+    </script>
+  </body>
+</html>

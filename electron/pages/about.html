@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>About TickerScope</title>
+    <link rel="stylesheet" href="shell.css" />
+  </head>
+  <body>
+    <div class="panel" style="gap: 12px">
+      <div class="row" style="gap: 14px">
+        <img src="../../assets/icon-256.png" alt="" style="width: 56px; height: 56px" />
+        <div>
+          <div class="brand" style="font-size: 20px">Ticker<span>Scope</span></div>
+          <div class="muted">Version <span id="version" class="mono"></span></div>
+        </div>
+      </div>
+      <div class="card" style="gap: 8px">
+        <div><span class="muted">Server</span> &nbsp;<code id="server"></code> <span id="mode" class="status"></span></div>
+        <div><span class="muted">Data</span> &nbsp;yfinance (Yahoo Finance, delayed, unofficial) · SEC EDGAR filings (cached)</div>
+        <div><span class="muted">Config</span> &nbsp;<code id="file" class="mono"></code></div>
+      </div>
+      <p class="status">Not investment advice. TickerScope is a personal learning tool; nothing here is a recommendation to buy or sell anything.</p>
+      <div class="row">
+        <button class="primary" id="ok">OK</button>
+        <button id="repo">GitHub repo</button>
+      </div>
+    </div>
+    <script>
+      const shell = window.tickerscopeShell;
+      (async () => {
+        const info = await shell.about();
+        document.getElementById("version").textContent = info.version;
+        document.getElementById("server").textContent = info.serverUrl;
+        document.getElementById("mode").textContent = info.local ? "· local mode" : "· remote mode";
+        document.getElementById("file").textContent = info.configFile;
+      })();
+      document.getElementById("ok").onclick = () => shell.close();
+      document.getElementById("repo").onclick = () => shell.openExternal("https://github.com/mc5161876-rgb/tickerscope");
+    </script>
+  </body>
+</html>

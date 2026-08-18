@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TickerScope — Settings</title>
+    <link rel="stylesheet" href="shell.css" />
+  </head>
+  <body>
+    <div class="panel">
+      <div class="brand"><img class="mark" src="../../assets/icon-256.png" alt="" /> Ticker<span>Scope</span> <span class="muted" style="font-weight: 400; font-size: 13px; color: var(--text-muted)">· desktop settings</span></div>
+      <div class="card">
+        <label for="server">Server address</label>
+        <input id="server" type="text" placeholder="http://127.0.0.1:8790" spellcheck="false" />
+        <p class="muted">
+          Local (127.0.0.1 / localhost): the app starts the server itself if it isn't running. Anything else (e.g.
+          <code>http://geekom:8790</code> on the tailnet) is remote — the app only connects.
+        </p>
+        <label for="repo">Repo path (local mode)</label>
+        <input id="repo" type="text" placeholder="C:\rex\tickerscope" spellcheck="false" />
+        <p class="muted">Folder with <code>pyproject.toml</code>; the server is started as <code>uv run uvicorn …</code> from here.</p>
+        <div class="row">
+          <button class="primary" id="save">Save</button>
+          <button id="cancel">Cancel</button>
+          <span id="status" class="status"></span>
+        </div>
+      </div>
+      <p class="status">Config file: <code id="file" class="mono"></code></p>
+    </div>
+    <script>
+      const shell = window.tickerscopeShell;
+      const $ = (id) => document.getElementById(id);
+      (async () => {
+        const cfg = await shell.getConfig();
+        $("server").value = cfg.serverUrl || "";
+        $("repo").value = cfg.repoPath || "";
+        $("file").textContent = cfg.__file || "";
+      })();
+      $("save").onclick = async () => {
+        $("status").textContent = "Saving…";
+        try {
+          await shell.setConfig({ serverUrl: $("server").value, repoPath: $("repo").value });
+          $("status").textContent = "Saved";
+          $("status").className = "status ok";
+          setTimeout(() => shell.close(), 350);
+        } catch (e) {
+          $("status").textContent = String(e?.message || e);
+          $("status").className = "status bad";
+        }
+      };
+      $("cancel").onclick = () => shell.close();
+    </script>
+  </body>
+</html>

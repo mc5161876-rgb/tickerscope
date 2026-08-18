@@ -68,6 +68,40 @@ pipe(web, "WEB", c.magenta);
 
 console.log(`${c.dim}TickerScope dev: API http://${apiHost}:${apiPort}  ·  Web http://127.0.0.1:${webPort}  (Ctrl+C stops both)${c.reset}`);
 
+// ---- optional: Electron shell pointed at the Vite dev URL (npm run dev:app, MAR-51)
+let appProc = null;
+if (process.argv.includes("--app")) {
+  const electronBin = path.join(root, "node_modules", "electron", "cli.js");
+  const waitFor = async (url, ms = 30000) => {
+    const end = Date.now() + ms;
+    while (Date.now() < end) {
+      try {
+        const r = await fetch(url);
+        if (r.ok) return true;
+      } catch {
+        /* not up yet */
+      }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    return false;
+  };
+  (async () => {
+    const up = await waitFor(`http://127.0.0.1:${webPort}/`);
+    if (!up) {
+      console.error(`${c.red}Vite did not come up on ${webPort}; not starting Electron${c.reset}`);
+      return;
+    }
+    console.log(`${c.dim}starting Electron against http://127.0.0.1:${webPort}${c.reset}`);
+    appProc = spawn(process.execPath, [electronBin, root], {
+      cwd: root,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, TICKERSCOPE_SERVER_URL: `http://127.0.0.1:${webPort}`, ELECTRON_RUN_AS_NODE: undefined },
+    });
+    pipe(appProc, "APP", "\x1b[33m");
+    appProc.on("exit", () => shutdown(0));
+  })();
+}
+
 let shuttingDown = false;
 function kill(child) {
   if (!child || child.exitCode !== null) return;
@@ -87,6 +121,7 @@ function shutdown(code = 0) {
   shuttingDown = true;
   kill(api);
   kill(web);
+  if (appProc) kill(appProc);
   setTimeout(() => process.exit(code), 400);
 }
 api.on("exit", (code) => {

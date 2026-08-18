@@ -15,6 +15,8 @@ function readTheme(): Theme {
 
 export function applyTheme(t: Theme) {
   document.documentElement.setAttribute("data-theme", t);
+  // desktop shell: keep the native title bar in step (MAR-51 AC-6)
+  window.tickerscope?.setTheme(t).catch(() => {});
 }
 
 export function useTheme(): [Theme, () => void, (t: Theme) => void] {

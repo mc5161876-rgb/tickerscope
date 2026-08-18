@@ -6,13 +6,61 @@
   "author": "Mario Cervantes",
   "license": "UNLICENSED",
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:api": "uv run uvicorn tickerscope.main:app --app-dir backend --host 127.0.0.1 --port 8790 --reload --reload-dir backend --reload-dir shared",
     "dev:web": "npm run dev --prefix frontend",
+    "dev:app": "node scripts/dev.mjs --app",
     "build": "npm run build --prefix frontend",
     "check": "npm run check --prefix frontend",
-    "test": "npm run test --prefix frontend",
+    "test": "npm run test --prefix frontend && node --test electron/tests/lib.test.mjs",
+    "test:electron": "node --test electron/tests/lib.test.mjs",
+    "icons:render": "node scripts/render-icons.mjs",
+    "start": "electron .",
+    "dist:win": "npm run build && npm run icons:render && electron-builder --win nsis",
     "postinstall": "npm install --prefix frontend"
+  },
+  "devDependencies": {
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.3"
+  },
+  "build": {
+    "appId": "com.mario.tickerscope",
+    "productName": "TickerScope",
+    "artifactName": "${productName} Setup ${version}.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "!electron/tests/**",
+      "assets/icon.ico",
+      "assets/icon-512.png",
+      "assets/tickerscope-mark.svg",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TickerScope",
+      "uninstallDisplayName": "TickerScope"
+    }
   }
 }

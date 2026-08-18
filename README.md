@@ -54,6 +54,30 @@ Phone access on the tailnet (HTTPS with the tailnet cert already enabled on this
 tailscale serve --bg 8790
 ```
 
+## Desktop app (Electron, MAR-51)
+
+```powershell
+npm run dev:app      # backend + Vite + Electron window on the dev URL
+npm run icons:render # regenerate assets/icon.ico + PNGs from assets/tickerscope-mark.svg
+npm run dist:win     # build frontend + icons, then release/TickerScope Setup 0.1.0.exe (NSIS, x64)
+```
+
+The installer puts `TickerScope.exe` in `%LOCALAPPDATA%\Programs\TickerScope\` with a desktop and
+Start Menu shortcut and an uninstaller. The window loads the app from the **Server address** in
+`%APPDATA%\TickerScope\config.json` (default `http://127.0.0.1:8790`):
+
+- **Local mode** (127.0.0.1 / localhost): on launch the shell health-checks `/api/health`; if it fails it
+  starts `uv run uvicorn …` itself from the repo path (`repoPath` in the config; defaults to the
+  checkout the shell was started from, then `C:\rex\tickerscope`), shows a "Starting TickerScope
+  server…" splash for up to 20 s, and stops that server on quit. It never touches a server it did not
+  start. Local mode needs the repo checkout + `uv` on the machine (Python is not bundled).
+- **Remote mode** (anything else, e.g. `http://geekom:8790` on the tailnet): never spawns; on failure
+  shows "Can't reach {url}" with Retry / Settings. See `docs/GEEKOM.md` for hosting the server there.
+
+Menu: File (Reload, Settings…, Quit) · View (zoom, fullscreen, DevTools) · Help (About: version, server,
+disclaimer). External links open in the system browser. Save image goes through a native Save dialog
+defaulting to `Downloads\{TICKER}-{chart}-{date}.png`. Shell logic is unit-tested with `npm run test:electron`.
+
 ## Test & lint
 
 ```powershell
@@ -124,7 +148,9 @@ backend/tickerscope/sec/  client.py · companyfacts.py · extractor.py · segmen
 backend/tests/         pytest + fixtures/ · tests/sec/ (ported extractor + cache tests, companyfacts, segments, api, corpus)
 shared/metrics.json    metric registry + explainer copy
 frontend/src/          App.tsx · pages/ · components/ · components/charts/ · lib/ · styles/ · __tests__/
-scripts/               start.ps1 · record_fixtures.py · probe_yf.py
+electron/              main.mjs · preload.cjs · preload-shell.cjs · lib.mjs (tested) · pages/ (splash, unreachable, settings, about)
+assets/                tickerscope-mark.svg (master) · icon.ico · icon-512.png
+scripts/               dev.mjs · start.ps1 · render-icons.mjs · smoke_cdp.py · record_fixtures.py · probe_yf.py · sec_probe.py
 docs/screenshots/      review screenshots (1280×800, 390×844)
 ```
 
@@ -142,10 +168,11 @@ docs/screenshots/      review screenshots (1280×800, 390×844)
   UI chrome, in the active theme — named `{TICKER}-{chart}-{YYYY-MM-DD}.png` (client-side via
   `html-to-image`, no server round trip).
 
-## Not in this build (see later issues)
+## Out of scope (by design)
 
-Electron shell + installer (MAR-51). Multiple watchlists / tags / notes / alerts, portfolio
-quantities or P&L, brokerage imports, and sharing to social/URL hosting are out of scope. Restatement-aware multi-year stitching (Q4 segment quarters, restated comparatives) is
+Auto-update, code signing, macOS/Linux builds, bundling Python in the installer, multiple watchlists /
+tags / notes / alerts, portfolio quantities or P&L, brokerage imports, sharing to social/URL hosting,
+and deploying anything to the Geekom from the desktop. Restatement-aware multi-year stitching (Q4 segment quarters, restated comparatives) is
 deliberately out of scope: each period shows the newest filed value. No auth, billing, brokerage,
 alerts, news, screener, or AI commentary — by design.
 

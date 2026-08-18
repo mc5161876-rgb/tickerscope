@@ -1,7 +1,66 @@
-// Settings (AC-4; MAR-49 AC-11 adds SEC EDGAR). My Stocks moved to pages/MyStocks.tsx (MAR-50).
+// Settings (AC-4; MAR-49 AC-11 adds SEC EDGAR; MAR-51 AC-5 adds the desktop "Server address").
+// My Stocks moved to pages/MyStocks.tsx (MAR-50).
 import { useEffect, useState } from "react";
 import { api, type HealthPayload } from "../lib/api";
 import type { Theme } from "../lib/theme";
+
+/** Desktop-only card: shown when running inside the Electron shell (window.tickerscope). */
+function ServerAddressCard() {
+  const shell = window.tickerscope;
+  const [value, setValue] = useState("");
+  const [saved, setSaved] = useState<string>("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [version, setVersion] = useState<string>("");
+  useEffect(() => {
+    if (!shell) return;
+    void shell.getConfig().then((c) => {
+      setValue(c.serverUrl);
+      setSaved(c.serverUrl);
+    });
+    void shell.version().then(setVersion);
+  }, [shell]);
+  if (!shell) return null;
+  const dirty = value.trim() !== saved;
+  const save = async () => {
+    setStatus("Saving…");
+    try {
+      const c = await shell.setConfig({ serverUrl: value.trim() });
+      setSaved(c.serverUrl);
+      setValue(c.serverUrl);
+      setStatus(c.serverUrl === saved ? "Saved" : "Saved — reconnecting…");
+    } catch (e) {
+      setStatus(e instanceof Error ? e.message : "Couldn't save");
+    }
+  };
+  return (
+    <div className="card row" data-testid="server-address">
+      <div className="k" style={{ flex: 1 }}>
+        <b>Server address (desktop app{version ? ` v${version}` : ""})</b>
+        <span>
+          Where this window loads TickerScope from. Local (<code>127.0.0.1</code>) — the app starts the server itself.
+          Anything else, e.g. <code>http://geekom:8790</code> on the tailnet, is remote: the app only connects.
+        </span>
+        <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            className="search-input"
+            style={{ height: 38, paddingLeft: 12, maxWidth: 420, fontSize: 14 }}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && dirty) void save();
+            }}
+            spellCheck={false}
+            aria-label="Server address"
+          />
+          <button type="button" className="ghost" onClick={() => void save()} disabled={!dirty}>
+            Save
+          </button>
+          {status && <span className="muted" style={{ fontSize: 12.5 }}>{status}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function Settings({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const [health, setHealth] = useState<HealthPayload | null>(null);
@@ -21,6 +80,7 @@ export function Settings({ theme, onToggleTheme }: { theme: Theme; onToggleTheme
       <h1 className="section-title" style={{ margin: "0 0 4px" }}>
         Settings
       </h1>
+      <ServerAddressCard />
       <div className="card row">
         <div className="k">
           <b>Lights: {theme === "dark" ? "Off" : "On"}</b>

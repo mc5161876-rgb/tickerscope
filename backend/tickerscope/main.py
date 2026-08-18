@@ -7,7 +7,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Body, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -19,6 +19,7 @@ from .sec.client import sec_configured, sec_user_agent
 from .sec.companyfacts import merge_with_yfinance
 from .sec.service import SecService
 from .service import TickerService, UpstreamDown
+from .watchlist import WatchlistError, WatchlistStore
 from .yahoo import NotFoundError
 
 log = logging.getLogger("tickerscope")
@@ -26,6 +27,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 VALID_RANGES = ("1y", "5y", "10y", "max")
 VALID_FREQS = ("annual", "quarterly")
+_BODY = Body(...)
 
 
 def create_app(
@@ -34,10 +36,12 @@ def create_app(
     search_index: SearchIndex | None = None,
     load_index_on_startup: bool = True,
     sec_service: SecService | None = None,
+    watchlist: WatchlistStore | None = None,
 ) -> FastAPI:
     cache = cache or DiskCache(config.cache_dir())
     index = search_index or SearchIndex(cache)
     service = TickerService(cache, fetcher)
+    wl = watchlist or WatchlistStore(config.data_dir() / "watchlist.json")
 
     def resolve_cik(symbol: str) -> str | None:
         if index.size == 0:
@@ -62,6 +66,7 @@ def create_app(
     app.state.search_index = index
     app.state.service = service
     app.state.sec = sec
+    app.state.watchlist = wl
 
     # ------------------------------------------------------------------ helpers
     def _json(payload: Any, cache_status: str, status_code: int = 200) -> JSONResponse:
@@ -203,6 +208,57 @@ def create_app(
         if yf_error is not None:
             payload["warnings"] = ["yfinance unavailable; showing SEC history only"]
         return _json(payload, cache_status)
+
+    # ------------------------------------------------------------------ watchlist (MAR-50)
+    def _wl_payload(items: list[dict[str, Any]]) -> dict[str, Any]:
+        return {"items": items, "count": len(items), "max": 100}
+
+    @app.get("/api/watchlist")
+    def watchlist_get() -> dict[str, Any]:
+        return _wl_payload(wl.list())
+
+    @app.put("/api/watchlist")
+    def watchlist_put(body: dict[str, Any] = _BODY) -> JSONResponse:
+        tickers = body.get("tickers") if isinstance(body, dict) else None
+        if not isinstance(tickers, list) or not all(isinstance(t, str) for t in tickers):
+            raise HTTPException(400, 'body must be {tickers: ["AAPL", ...]}')
+        try:
+            items = wl.replace(tickers)
+        except WatchlistError as exc:
+            return JSONResponse({"error": "invalid_watchlist", "detail": str(exc)}, status_code=422)
+        return JSONResponse(_wl_payload(items))
+
+    @app.post("/api/watchlist/{ticker}")
+    def watchlist_add(ticker: str) -> JSONResponse:
+        try:
+            items, added = wl.add(ticker)
+        except WatchlistError as exc:
+            return JSONResponse({"error": "invalid_ticker", "detail": str(exc)}, status_code=422)
+        return JSONResponse(
+            {**_wl_payload(items), "added": added}, status_code=201 if added else 200
+        )
+
+    @app.delete("/api/watchlist/{ticker}")
+    def watchlist_remove(ticker: str) -> JSONResponse:
+        try:
+            items, removed = wl.remove(ticker)
+        except WatchlistError as exc:
+            return JSONResponse({"error": "invalid_ticker", "detail": str(exc)}, status_code=422)
+        return JSONResponse({**_wl_payload(items), "removed": removed})
+
+    @app.get("/api/quotes")
+    def quotes(symbols: str = Query("", max_length=1200)) -> JSONResponse:
+        """Batched quotes for the watchlist (AC-2): one fetcher call for every uncached symbol."""
+        syms = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not syms:
+            return _json({"quotes": {}, "stale": []}, "hit")
+        if len(syms) > 100:
+            raise HTTPException(400, "at most 100 symbols")
+        try:
+            res = service.quotes(syms)
+        except UpstreamDown as exc:
+            return _upstream_down(exc)
+        return _json({"quotes": res["quotes"], "stale": res["stale"]}, res["cache"])
 
     @app.get("/api/ticker/{symbol}/segments")
     def segments(symbol: str, freq: str = Query("annual")) -> JSONResponse:

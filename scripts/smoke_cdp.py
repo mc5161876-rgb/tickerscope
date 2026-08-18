@@ -297,6 +297,184 @@ async def sec_checks(cdp: CDP, failures: list[str]) -> None:
     await cdp.shot(SHOTS / "segments-JPM-1280x800.png")
 
 
+def _png_width(path: Path) -> int:
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        return 0
+    return int.from_bytes(data[16:20], "big")
+
+
+async def mar50_checks(cdp: CDP, failures: list[str]) -> None:
+    """My Stocks (AC-1..AC-6), fullscreen (AC-7/8), Save image (AC-9/10)."""
+    print("== MAR-50 checks")
+    await cdp.viewport(1280, 800)
+    api = BASE
+    # remember the user's real list, work on a known one, restore at the end
+    await cdp.goto(f"{BASE}/", settle=1)
+    orig = json.loads(await cdp.eval(f"fetch('{api}/api/watchlist').then(r=>r.text())"))
+    orig_tickers = [i["ticker"] for i in orig.get("items", [])]
+    print("original watchlist:", orig_tickers)
+    await cdp.eval(
+        f"fetch('{api}/api/watchlist', {{method:'PUT', headers:{{'content-type':'application/json'}}, body: JSON.stringify({{tickers:['NVDA','AAPL','JPM']}})}}).then(r=>r.status)"
+    )
+
+    # ---- Home list
+    await cdp.goto(f"{BASE}/", settle=4)
+    rows = await cdp.eval(
+        "[...document.querySelectorAll('.home-mystocks .wl-row')].map(r => r.dataset.ticker)"
+    )
+    print("home rows:", rows)
+    if rows != ["NVDA", "AAPL", "JPM"]:
+        failures.append(f"Home My Stocks rows {rows}")
+    cell = await cdp.eval(
+        "document.querySelector('.home-mystocks .wl-row')?.innerText.replace(/\\s+/g,' ') ?? ''"
+    )
+    if not cell or "$" not in cell or "×" not in cell:
+        failures.append(f"Home row should show price/market cap/P/E, got: {cell[:80]}")
+    await cdp.shot(SHOTS / "home-mystocks-1280x800.png")
+
+    # ---- /my-stocks: bulk import + reorder + remove/undo
+    await cdp.goto(f"{BASE}/my-stocks", settle=3)
+    await cdp.eval("document.querySelector('.addstock input')?.focus()")
+    await cdp.type_text("MSFT, AMZN NASDAQ:GOOGL, ZZZZ9-nope-too-long")
+    await cdp.key("Enter", "Enter")
+    await asyncio.sleep(1.5)
+    toast = await cdp.eval(
+        "[...document.querySelectorAll('.toast .msg')].map(t=>t.textContent).join(' || ')"
+    )
+    print("bulk toast:", toast)
+    rows = await cdp.eval("[...document.querySelectorAll('.wl-row')].map(r => r.dataset.ticker)")
+    print("after bulk:", rows)
+    if rows[:6] != ["NVDA", "AAPL", "JPM", "MSFT", "AMZN", "GOOGL"]:
+        failures.append(f"bulk import rows {rows}")
+    if "invalid" not in toast:
+        failures.append("bulk import should report the invalid token in a toast")
+    # move JPM (index 2) up with the arrow button
+    await cdp.click('.wl-row[data-ticker="JPM"] button[aria-label="Move JPM up"]')
+    await asyncio.sleep(1.0)
+    rows = await cdp.eval("[...document.querySelectorAll('.wl-row')].map(r => r.dataset.ticker)")
+    print("after move up:", rows)
+    if rows[:3] != ["NVDA", "JPM", "AAPL"]:
+        failures.append(f"↑ reorder failed: {rows}")
+    # remove GOOGL, then undo
+    await cdp.click('.wl-row[data-ticker="GOOGL"] button[aria-label="Remove GOOGL"]')
+    await asyncio.sleep(0.8)
+    rows = await cdp.eval("[...document.querySelectorAll('.wl-row')].map(r => r.dataset.ticker)")
+    if "GOOGL" in rows:
+        failures.append("remove did not remove GOOGL")
+    await cdp.click(".toast .act")
+    await asyncio.sleep(1.0)
+    rows = await cdp.eval("[...document.querySelectorAll('.wl-row')].map(r => r.dataset.ticker)")
+    print("after undo:", rows)
+    if "GOOGL" not in rows:
+        failures.append("undo did not restore GOOGL")
+    await cdp.shot(SHOTS / "mystocks-1280x800.png")
+    # persistence: reload Home, order identical
+    await cdp.goto(f"{BASE}/", settle=3)
+    home_rows = await cdp.eval(
+        "[...document.querySelectorAll('.home-mystocks .wl-row')].map(r => r.dataset.ticker)"
+    )
+    server_rows = json.loads(await cdp.eval(f"fetch('{api}/api/watchlist').then(r=>r.text())"))
+    server_rows = [i["ticker"] for i in server_rows["items"]]
+    print("home after reload:", home_rows, "server:", server_rows)
+    if home_rows != server_rows or home_rows[:3] != ["NVDA", "JPM", "AAPL"]:
+        failures.append(f"order not persisted identically: home={home_rows} server={server_rows}")
+
+    # ---- ticker header toggle
+    await cdp.goto(f"{BASE}/t/TSLA", settle=4)
+    label = await cdp.eval("document.querySelector('[data-testid=watch-toggle]')?.textContent")
+    print("toggle before:", label)
+    await cdp.click("[data-testid=watch-toggle]")
+    await asyncio.sleep(1.0)
+    label2 = await cdp.eval("document.querySelector('[data-testid=watch-toggle]')?.textContent")
+    print("toggle after:", label2)
+    if not label or "Add" not in label or not label2 or "In My Stocks" not in label2:
+        failures.append(f"watch toggle did not flip: {label} -> {label2}")
+    await cdp.click("[data-testid=watch-toggle]")  # remove again to keep the list tidy
+    await asyncio.sleep(0.6)
+
+    # ---- fullscreen via URL + Esc
+    await cdp.goto(f"{BASE}/t/NVDA?chart=revenue", settle=4)
+    fs = await cdp.eval(
+        "(() => { const d = document.querySelector('.fs'); return d ? { title: d.querySelector('h2')?.textContent, bars: d.querySelectorAll('.recharts-bar-rectangle path').length, ticks: d.querySelectorAll('.recharts-cartesian-axis-tick-value').length, hasQA: !!d.querySelector('.segmented') } : null })()"
+    )
+    print("fullscreen revenue:", fs)
+    if not fs or fs["title"] != "Revenue" or fs["bars"] < 4 or not fs["hasQA"]:
+        failures.append(f"fullscreen ?chart=revenue: {fs}")
+    await cdp.shot(SHOTS / "fullscreen-revenue-1280x800.png")
+    await cdp.key("Escape", "Escape")
+    await asyncio.sleep(0.4)
+    still = await cdp.eval("!!document.querySelector('.fs')")
+    url = await cdp.eval("location.search")
+    if still or "chart=" in url:
+        failures.append("Esc should close fullscreen and drop ?chart=")
+    # price fullscreen crosshair
+    await cdp.goto(f"{BASE}/t/NVDA?chart=price", settle=4)
+    await cdp.eval(
+        """(() => { const s = document.querySelector('.fs svg.recharts-surface'); if (!s) return; const r = s.getBoundingClientRect(); s.dispatchEvent(new MouseEvent('mousemove', {clientX: r.left + r.width*0.6, clientY: r.top + r.height*0.5, bubbles: true})); })()"""
+    )
+    await asyncio.sleep(0.4)
+    xh = await cdp.eval("!!document.querySelector('.fs .crosshair')")
+    print("price crosshair:", xh)
+    if not xh:
+        failures.append("fullscreen price chart should show a crosshair on hover")
+    await cdp.shot(SHOTS / "fullscreen-price-1280x800.png")
+    await cdp.key("Escape", "Escape")
+
+    # ---- Save image (AC-9/AC-10): capture the export via the exported event
+    await cdp.goto(f"{BASE}/t/NVDA", settle=4)
+    await cdp.eval(
+        "window.__exp = null; window.addEventListener('tickerscope:exported', e => { window.__exp = e.detail; })"
+    )
+    await cdp.click('button[aria-label="Save Revenue as image"]')
+    for _ in range(40):
+        await asyncio.sleep(0.5)
+        if await cdp.eval("!!window.__exp"):
+            break
+    exp = await cdp.eval(
+        "window.__exp ? { filename: window.__exp.filename, len: window.__exp.dataUrl.length } : null"
+    )
+    print("export:", exp)
+    if (
+        not exp
+        or not exp["filename"].startswith("NVDA-revenue-")
+        or not exp["filename"].endswith(".png")
+    ):
+        failures.append(f"Save image did not produce NVDA-revenue-YYYY-MM-DD.png: {exp}")
+    else:
+        data_url = await cdp.eval("window.__exp.dataUrl")
+        raw = base64.b64decode(data_url.split(",", 1)[1])
+        out = SHOTS / "export-sample.png"
+        out.write_bytes(raw)
+        w = _png_width(out)
+        print(f"  saved docs/screenshots/export-sample.png ({w}px wide, {len(raw) // 1024} KB)")
+        if w < 1600:
+            failures.append(f"export PNG should be >= 1600px wide, got {w}")
+    # light-theme export too
+    await cdp.click(".topbar .switch")
+    await asyncio.sleep(0.4)
+    await cdp.eval("window.__exp = null")
+    await cdp.click('button[aria-label="Save Stock Price as image"]')
+    for _ in range(40):
+        await asyncio.sleep(0.5)
+        if await cdp.eval("!!window.__exp"):
+            break
+    exp2 = await cdp.eval("window.__exp ? window.__exp.filename : null")
+    print("light export:", exp2)
+    if exp2:
+        data_url = await cdp.eval("window.__exp.dataUrl")
+        (SHOTS / "export-sample-light.png").write_bytes(base64.b64decode(data_url.split(",", 1)[1]))
+    else:
+        failures.append("light-theme export failed")
+    await cdp.click(".topbar .switch")
+
+    # restore the user's real watchlist
+    await cdp.eval(
+        f"fetch('{api}/api/watchlist', {{method:'PUT', headers:{{'content-type':'application/json'}}, body: JSON.stringify({{tickers:{json.dumps(orig_tickers)}}})}}).then(r=>r.status)"
+    )
+    print("watchlist restored:", orig_tickers)
+
+
 async def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--eval", dest="expr")
@@ -447,6 +625,9 @@ async def main(argv: list[str]) -> int:
                 await sec_checks(cdp, failures)
             else:
                 print("(SEC_USER_AGENT not set: skipping segment checks)")
+
+            # ---- MAR-50: My Stocks, fullscreen, export
+            await mar50_checks(cdp, failures)
 
             # ---- home
             await cdp.goto(f"{BASE}/", settle=2)

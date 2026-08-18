@@ -87,6 +87,8 @@ AMZN / NFLX / INTC / UNH / JPM.
 | `GET /api/ticker/{symbol}/prices?range=1y\|5y\|10y\|max` | `{points:[{date,close}], sampled}` (6h cache) |
 | `GET /api/ticker/{symbol}/financials?freq=annual\|quarterly` | up to 10 fiscal years / 40 quarters: `{revenue:[{period_end,label,value,source,accession,filed,form,method}], ebitda:[...], ebitda_method, sec:{status}}` — SEC companyfacts wins per period, yfinance fills gaps (marked) |
 | `GET /api/ticker/{symbol}/segments?freq=annual\|quarterly` | Revenue by Segment contract per period: `coverage_state`, `render_mode`, `view`, `rows[]`, `consolidation_bridge[]`, totals, `alternative?`, `message?`, `provenance{form,accession,filed,axis,cik,edgar_url}`, plus `legend`, `resegmentations`, `filings_read` |
+| `GET /api/watchlist` · `PUT /api/watchlist {tickers:[…]}` · `POST/DELETE /api/watchlist/{ticker}` | My Stocks (MAR-50): validated (uppercase, unique, ≤ 100), persisted atomically to `data/watchlist.json` |
+| `GET /api/quotes?symbols=A,B,C` | batched watchlist quotes: one fetcher call for every uncached symbol, 15-min `ticker` cache reused/warmed; unknown symbols → `null` |
 | `GET /api/metrics` | the shared registry |
 
 Every numeric field is nullable; keys are snake_case. Responses carry `x-cache: hit|miss|stale`.
@@ -117,7 +119,7 @@ Env: `SEC_USER_AGENT` (in `.env`), `TICKERSCOPE_DATA_DIR` (cache location, defau
 ## Layout
 
 ```
-backend/tickerscope/   main.py (FastAPI) · yahoo.py (only yfinance import) · search.py · cache.py · service.py · metrics.py · config.py
+backend/tickerscope/   main.py (FastAPI) · yahoo.py (only yfinance import) · search.py · cache.py · service.py · metrics.py · watchlist.py · config.py
 backend/tickerscope/sec/  client.py · companyfacts.py · extractor.py · segments.py · service.py
 backend/tests/         pytest + fixtures/ · tests/sec/ (ported extractor + cache tests, companyfacts, segments, api, corpus)
 shared/metrics.json    metric registry + explainer copy
@@ -126,10 +128,24 @@ scripts/               start.ps1 · record_fixtures.py · probe_yf.py
 docs/screenshots/      review screenshots (1280×800, 390×844)
 ```
 
+### My Stocks, fullscreen, share cards (MAR-50)
+
+- Watchlist lives server-side (`data/watchlist.json`, atomic temp+rename) so it survives browsers
+  and the Electron shell. Home shows it under the search box; `/my-stocks` is the full-width
+  version with **Add Stock** (same search component; paste a list — commas/spaces/newlines,
+  `NASDAQ:AAPL` works — invalid tokens are reported in a toast, never dropped), remove with a
+  5-second Undo, drag handle or ↑/↓ to reorder. The ticker header has **Add to My Stocks / In My
+  Stocks ✓**; the `Ctrl+K` palette lists My Stocks before you type.
+- Every chart card's expand icon opens a fullscreen modal (`?chart=price|revenue|ebitda|segments`,
+  linkable), with finer ticks and a price crosshair; **Save image** (card or fullscreen) renders a
+  2× PNG share card — title, ticker + company, period, watermark, generation date, source line, no
+  UI chrome, in the active theme — named `{TICKER}-{chart}-{YYYY-MM-DD}.png` (client-side via
+  `html-to-image`, no server round trip).
+
 ## Not in this build (see later issues)
 
-My Stocks watchlist + fullscreen charts + share-card export (MAR-50), Electron shell + installer
-(MAR-51). Restatement-aware multi-year stitching (Q4 segment quarters, restated comparatives) is
+Electron shell + installer (MAR-51). Multiple watchlists / tags / notes / alerts, portfolio
+quantities or P&L, brokerage imports, and sharing to social/URL hosting are out of scope. Restatement-aware multi-year stitching (Q4 segment quarters, restated comparatives) is
 deliberately out of scope: each period shows the newest filed value. No auth, billing, brokerage,
 alerts, news, screener, or AI commentary — by design.
 

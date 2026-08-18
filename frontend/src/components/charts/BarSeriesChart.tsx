@@ -42,7 +42,17 @@ function BarTooltip({ active, payload, name }: { active?: boolean; payload?: { p
   );
 }
 
-export function BarSeriesChart({ points, name }: { points: PeriodPoint[]; name: string }) {
+export function BarSeriesChart({
+  points,
+  name,
+  detail = false,
+  hideTooltip = false,
+}: {
+  points: PeriodPoint[];
+  name: string;
+  detail?: boolean;
+  hideTooltip?: boolean;
+}) {
   const many = points.length > 12;
   const [ref, size] = useSize<HTMLDivElement>();
   return (
@@ -58,21 +68,27 @@ export function BarSeriesChart({ points, name }: { points: PeriodPoint[]; name: 
           <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
           <XAxis
             dataKey="label"
-            tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+            tick={{ fill: "var(--chart-axis)", fontSize: detail ? 12 : 11 }}
             axisLine={false}
             tickLine={false}
-            interval={many ? "preserveStartEnd" : 0}
-            minTickGap={12}
+            interval={detail ? 0 : many ? "preserveStartEnd" : 0}
+            minTickGap={detail ? 4 : 12}
+            angle={detail && many ? -35 : 0}
+            height={detail && many ? 46 : 30}
+            textAnchor={detail && many ? "end" : "middle"}
           />
           <YAxis
             orientation="right"
-            width={54}
+            width={detail ? 62 : 54}
+            tickCount={detail ? 9 : 5}
             tickFormatter={yTick}
-            tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+            tick={{ fill: "var(--chart-axis)", fontSize: detail ? 12 : 11 }}
             axisLine={false}
             tickLine={false}
           />
-          <Tooltip content={<BarTooltip name={name} />} cursor={{ fill: "var(--accent-soft)" }} isAnimationActive={false} />
+          {!hideTooltip && (
+            <Tooltip content={<BarTooltip name={name} />} cursor={{ fill: "var(--accent-soft)" }} isAnimationActive={false} />
+          )}
           <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive={false} maxBarSize={38}>
             {points.map((p) => (
               <Cell

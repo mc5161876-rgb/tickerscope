@@ -1,20 +1,7 @@
-// My Stocks placeholder (AC-4, NG-3) and Settings (AC-4; MAR-49 AC-11 adds SEC EDGAR).
+// Settings (AC-4; MAR-49 AC-11 adds SEC EDGAR). My Stocks moved to pages/MyStocks.tsx (MAR-50).
 import { useEffect, useState } from "react";
 import { api, type HealthPayload } from "../lib/api";
 import type { Theme } from "../lib/theme";
-
-export function MyStocks() {
-  return (
-    <div className="card placeholder">
-      <div className="caps">My Stocks</div>
-      <h1>Coming in a later build</h1>
-      <p>
-        Your watchlist lives here once issue #3 ships: saved tickers, one-tap jumps from the search palette, and
-        fullscreen charts. Until then, use Recent on the Dashboard.
-      </p>
-    </div>
-  );
-}
 
 export function Settings({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const [health, setHealth] = useState<HealthPayload | null>(null);

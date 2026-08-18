@@ -237,6 +237,68 @@ def fetch_profile_and_metrics(symbol: str) -> dict[str, Any]:
     }
 
 
+# --------------------------------------------------------------------------- batched quotes
+def fetch_quotes(symbols: list[str], max_workers: int = 6) -> dict[str, dict[str, Any] | None]:
+    """One batched call for a watchlist (MAR-50 AC-2): a single `yf.Tickers` object, per-symbol
+    payloads pulled concurrently. Returns {SYMBOL: ticker payload | None (unknown / failed)}.
+    Raises DataSourceError only when *every* symbol fails (Yahoo down), so one bad ticker never
+    blanks the list.
+    """
+    _guard()
+    syms = [s.upper().strip() for s in symbols if s and s.strip()]
+    if not syms:
+        return {}
+    try:
+        batch = yf.Tickers(" ".join(syms))
+    except Exception as exc:  # noqa: BLE001
+        raise DataSourceError(str(exc)) from exc
+
+    def one(sym: str) -> tuple[str, dict[str, Any] | None, Exception | None]:
+        try:
+            t = batch.tickers.get(sym) or yf.Ticker(sym)
+            info = t.info or {}
+            has_price = _num(info.get("regularMarketPrice") or info.get("currentPrice")) is not None
+            has_name = bool(info.get("shortName") or info.get("longName"))
+            if not has_price and not has_name:
+                return sym, None, None
+            try:
+                cal = t.calendar or {}
+            except Exception:  # noqa: BLE001
+                cal = {}
+            now = dt.datetime.now(tz=dt.UTC).isoformat().replace("+00:00", "Z")
+            quote = build_quote(info)
+            return (
+                sym,
+                {
+                    "symbol": sym,
+                    "profile": build_profile(info),
+                    "quote": quote,
+                    "metrics": build_metrics(info, cal),
+                    "as_of": quote["market_time"] or now,
+                    "fetched_at": now,
+                },
+                None,
+            )
+        except Exception as exc:  # noqa: BLE001
+            msg = str(exc)
+            if "404" in msg or "not found" in msg.lower():
+                return sym, None, None
+            return sym, None, exc
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    out: dict[str, dict[str, Any] | None] = {}
+    errors: list[Exception] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        for sym, payload, err in pool.map(one, syms):
+            out[sym] = payload
+            if err is not None:
+                errors.append(err)
+    if errors and len(errors) == len(syms):
+        raise DataSourceError(str(errors[0]))
+    return out
+
+
 # --------------------------------------------------------------------------- prices
 def fetch_prices(symbol: str, range_key: str) -> dict[str, Any]:
     _guard()

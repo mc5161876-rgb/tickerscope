@@ -1,7 +1,6 @@
-// Card chrome shared by the Insights charts (AC-11): title, actions, watermark footer,
-// expand icon present-but-disabled (fullscreen ships in issue #3). `below` renders under the
-// chart body (legends); `tall` gives the segment card a little more room.
-import { Maximize2 } from "lucide-react";
+// Card chrome shared by the Insights charts (AC-11): title, actions, watermark footer.
+// MAR-50: expand opens fullscreen (onExpand) and Save image exports a PNG (onSave).
+import { Download, Maximize2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Mark } from "../Mark";
 
@@ -13,6 +12,9 @@ export function ChartCard({
   footRight,
   below,
   tall = false,
+  onExpand,
+  onSave,
+  saving = false,
 }: {
   title: string;
   subtitle?: string | null;
@@ -21,6 +23,9 @@ export function ChartCard({
   footRight?: ReactNode;
   below?: ReactNode;
   tall?: boolean;
+  onExpand?: () => void;
+  onSave?: () => void;
+  saving?: boolean;
 }) {
   return (
     <section className="card chart-card" aria-label={title}>
@@ -29,9 +34,26 @@ export function ChartCard({
           <h3 className="chart-title">{title}</h3>
           {subtitle ? <p className="chart-sub">{subtitle}</p> : null}
         </div>
-        <div className="chart-actions">
+        <div className="chart-actions" data-export-skip="true">
           {controls}
-          <button type="button" className="icon-btn" disabled title="Fullscreen (coming in a later build)" aria-label="Fullscreen (coming in a later build)">
+          <button
+            type="button"
+            className="icon-btn"
+            disabled={!onSave || saving}
+            onClick={onSave}
+            title="Save image (PNG, 2×)"
+            aria-label={`Save ${title} as image`}
+          >
+            <Download size={15} />
+          </button>
+          <button
+            type="button"
+            className="icon-btn"
+            disabled={!onExpand}
+            onClick={onExpand}
+            title={onExpand ? "Fullscreen" : "Fullscreen (not available)"}
+            aria-label={`Open ${title} fullscreen`}
+          >
             <Maximize2 size={15} />
           </button>
         </div>

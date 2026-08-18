@@ -51,10 +51,19 @@ export interface PricesPayload {
   sampled: boolean;
 }
 
+export type PointSource = "sec" | "yfinance";
 export interface PeriodPoint {
   period_end: string;
+  period_start?: string | null;
   label: string;
   value: number;
+  /** MAR-49: provenance. Older payloads / yfinance-only rows carry nulls. */
+  source?: PointSource;
+  accession?: string | null;
+  filed?: string | null;
+  form?: string | null;
+  method?: "as_filed" | "calculated";
+  tag?: string | null;
 }
 export type Freq = "annual" | "quarterly";
 export interface FinancialsPayload {
@@ -64,6 +73,89 @@ export interface FinancialsPayload {
   revenue: PeriodPoint[];
   ebitda: PeriodPoint[];
   ebitda_method: "reported" | "calculated" | null;
+  sec?: { status: SecStatus | null; message?: string | null; cik?: string | null };
+  warnings?: string[];
+}
+
+// ---- Revenue by Segment (MAR-49, contract ported from traderscope API_CONTRACT_V1) ----
+export type SecStatus = "ok" | "not_configured" | "not_found" | "error";
+export type CoverageState =
+  | "as_filed"
+  | "as_filed_with_bridge"
+  | "needs_review"
+  | "withheld_alternative"
+  | "single_segment"
+  | "unavailable";
+export type RenderMode = "stacked" | "withheld" | "single_segment" | "unavailable";
+export type RowType =
+  | "reportable_segment"
+  | "corporate_nonsegment"
+  | "geographic_region"
+  | "product_service"
+  | "breakdown_component"
+  | "filed_elimination"
+  | "filed_reconciling_item";
+export type ViewKind = "business" | "geography" | "product_service" | "other";
+
+export interface SegmentRow {
+  label: string;
+  value: number;
+  type: RowType;
+  concept: string;
+}
+export interface SegmentAlternative {
+  kind: ViewKind;
+  label: string;
+  available: boolean;
+  axis: string;
+  render_mode: "stacked";
+  rows: SegmentRow[];
+  positive_stack_total: number | null;
+  consolidated_total: number | null;
+  reconciliation_delta_pct: number | null;
+  component_count: number;
+}
+export interface SegmentProvenance {
+  form: string | null;
+  accession: string | null;
+  filed: string | null;
+  axis: string | null;
+  cik: string | null;
+  edgar_url: string | null;
+}
+export interface SegmentPeriod {
+  period_start: string | null;
+  period_end: string;
+  label: string;
+  coverage_state: CoverageState;
+  render_mode: RenderMode;
+  view: { kind: ViewKind; label: string };
+  rows: SegmentRow[];
+  consolidation_bridge: SegmentRow[];
+  signed_bridge_total: number;
+  positive_stack_total: number | null;
+  calculated_total: number | null;
+  consolidated_total: number | null;
+  reconciliation_delta_pct: number | null;
+  reportable_segment_count: number;
+  provenance: SegmentProvenance;
+  message?: string;
+  alternative?: SegmentAlternative;
+  single_segment_fact?: { concept: string; value: number; source_label: string };
+}
+export interface SegmentsPayload {
+  symbol: string;
+  freq: Freq;
+  cik: string | null;
+  company_name: string | null;
+  currency: string | null;
+  status: SecStatus;
+  message?: string;
+  periods: SegmentPeriod[];
+  legend: { concept: string; label: string; type: RowType }[];
+  resegmentations: string[];
+  filings_read: { form: string; accession: string; filed: string }[];
+  generated_at?: string;
 }
 
 export interface SearchResult {
@@ -79,6 +171,8 @@ export interface HealthPayload {
   yfinance_version: string;
   search_index_size: number;
   version: string;
+  sec_configured?: boolean;
+  sec_user_agent_hint?: string | null;
 }
 
 export type ApiResult<T> =
@@ -123,4 +217,6 @@ export const api = {
     get<PricesPayload>(`/api/ticker/${encodeURIComponent(symbol)}/prices?range=${range}`, signal),
   financials: (symbol: string, freq: Freq, signal?: AbortSignal) =>
     get<FinancialsPayload>(`/api/ticker/${encodeURIComponent(symbol)}/financials?freq=${freq}`, signal),
+  segments: (symbol: string, freq: Freq, signal?: AbortSignal) =>
+    get<SegmentsPayload>(`/api/ticker/${encodeURIComponent(symbol)}/segments?freq=${freq}`, signal),
 };

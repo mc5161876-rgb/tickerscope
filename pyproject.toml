@@ -37,3 +37,5 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 "backend/tests/*" = ["E501"]
 "scripts/smoke_cdp.py" = ["E501"]  # embedded JS one-liners
+"scripts/sec_probe.py" = ["E501"]
+"backend/tickerscope/sec/extractor.py" = ["E501"]  # ported near-verbatim from traderscope

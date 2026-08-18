@@ -29,6 +29,16 @@
   --tooltip-bg: #1a1e25;
   --tooltip-border: rgba(255, 255, 255, 0.1);
   --card-shadow: none;
+  /* segment stack ramp: blues (accent family) + one green, corporate = grey. No third accent. */
+  --seg-1: #1b9bff;
+  --seg-2: #22c55e;
+  --seg-3: #7cc4ff;
+  --seg-4: #0b6fc2;
+  --seg-5: #bfe1ff;
+  --seg-6: #0a4e8a;
+  --seg-7: #4fb0ff;
+  --seg-8: #16a34a;
+  --seg-corp: #4b5563;
 }
 
 :root[data-theme="light"] {
@@ -58,6 +68,15 @@
   --tooltip-bg: #0f172a;
   --tooltip-border: rgba(255, 255, 255, 0.08);
   --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --seg-1: #4f46e5;
+  --seg-2: #16a34a;
+  --seg-3: #818cf8;
+  --seg-4: #3730a3;
+  --seg-5: #c7d2fe;
+  --seg-6: #1e1b4b;
+  --seg-7: #6366f1;
+  --seg-8: #22c55e;
+  --seg-corp: #94a3b8;
 }
 
 :root {

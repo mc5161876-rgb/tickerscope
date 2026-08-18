@@ -9,7 +9,8 @@ import { Search } from "../components/Search";
 import { BarSeriesChart } from "../components/charts/BarSeriesChart";
 import { ChartCard, ChartEmpty, ChartSkeleton } from "../components/charts/ChartCard";
 import { PriceChart } from "../components/charts/PriceChart";
-import { api, type Freq, type PriceRange, type TickerPayload } from "../lib/api";
+import { SegmentCard } from "../components/charts/SegmentCard";
+import { api, type Freq, type PriceRange, type SegmentsPayload, type TickerPayload } from "../lib/api";
 import { fmtAsOf, fmtChange, fmtInteger, fmtPrice } from "../lib/format";
 import { METRIC_GROUPS, metricsInGroup } from "../lib/metrics";
 import { pushRecent } from "../lib/recent";
@@ -43,10 +44,13 @@ export function TickerPage({
   const loadTicker = useCallback((s: AbortSignal) => api.ticker(ticker, s), [ticker]);
   const loadPrices = useCallback((s: AbortSignal) => api.prices(ticker, range, s), [ticker, range]);
   const loadFin = useCallback((s: AbortSignal) => api.financials(ticker, freq, s), [ticker, freq]);
+  const loadSeg = useCallback((s: AbortSignal) => api.segments(ticker, freq, s), [ticker, freq]);
 
   const t = useResource<TickerPayload>(ticker ? `t:${ticker}` : null, loadTicker);
   const p = useResource(ticker ? `p:${ticker}:${range}` : null, loadPrices);
   const f = useResource(ticker ? `f:${ticker}:${freq}` : null, loadFin);
+  // segments are independent of /api/ticker (AC-9): the snapshot never waits on SEC reads
+  const sg = useResource<SegmentsPayload>(ticker ? `s:${ticker}:${freq}` : null, loadSeg);
 
   // header company selector + recents
   useEffect(() => {
@@ -244,7 +248,10 @@ export function TickerPage({
 
           <ChartCard
             title="Revenue"
-            subtitle={freq === "quarterly" ? "Total revenue, by quarter" : "Total revenue, by fiscal year"}
+            subtitle={
+              (f.data?.sec?.status === "ok" ? "SEC filings + yfinance, " : "yfinance, ") +
+              (freq === "quarterly" ? "by quarter" : "by fiscal year")
+            }
           >
             {f.status === "loading" && !f.data ? (
               <ChartSkeleton />
@@ -275,11 +282,9 @@ export function TickerPage({
               <ChartEmpty>{f.status === "error" ? "Data source unavailable" : "Not available from source"}</ChartEmpty>
             )}
           </ChartCard>
+
+          <SegmentCard res={sg} freq={freq} />
         </div>
-        <p className="footnote">
-          Financial history from yfinance covers ~4–5 years; 10-year history and Revenue by Segment arrive with SEC
-          data (next build).
-        </p>
       </section>
 
       <ContextStrip

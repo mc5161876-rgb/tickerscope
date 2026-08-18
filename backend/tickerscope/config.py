@@ -10,6 +10,29 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SHARED_DIR = REPO_ROOT / "shared"
 METRICS_JSON = SHARED_DIR / "metrics.json"
 FRONTEND_DIST = REPO_ROOT / "frontend" / "dist"
+ENV_FILE = REPO_ROOT / ".env"
+
+
+def load_dotenv(path: Path = ENV_FILE) -> None:
+    """Minimal .env loader (KEY=VALUE, # comments, optional quotes). Never overrides real env."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+load_dotenv()
 
 
 def data_dir() -> Path:
@@ -19,6 +42,22 @@ def data_dir() -> Path:
 
 def cache_dir() -> Path:
     return data_dir() / "cache"
+
+
+def sec_cache_dir() -> Path:
+    """Durable SEC response cache (immutable filings cached forever) - AC-8."""
+    return data_dir() / "sec-cache"
+
+
+def sec_diagnostics_dir() -> Path:
+    return data_dir() / "sec-diagnostics"
+
+
+# SEC history depth (MAR-49)
+SEC_ANNUAL_YEARS = 10
+SEC_QUARTERS = 40
+SEC_SEGMENT_QUARTER_YEARS = 5  # 10-Qs are 4 fetches each; keep the first open bounded
+TTL_SEC_DERIVED = 6 * 60 * 60  # computed series/segments payloads
 
 
 def force_fail() -> bool:

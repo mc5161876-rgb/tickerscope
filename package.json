@@ -7,15 +7,12 @@
   "license": "UNLICENSED",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n API,WEB -c cyan,magenta \"uv run uvicorn tickerscope.main:app --app-dir backend --host 127.0.0.1 --port 8790 --reload\" \"npm run dev --prefix frontend\"",
-    "dev:api": "uv run uvicorn tickerscope.main:app --app-dir backend --host 127.0.0.1 --port 8790 --reload",
+    "dev": "node scripts/dev.mjs",
+    "dev:api": "uv run uvicorn tickerscope.main:app --app-dir backend --host 127.0.0.1 --port 8790 --reload --reload-dir backend --reload-dir shared",
     "dev:web": "npm run dev --prefix frontend",
     "build": "npm run build --prefix frontend",
     "check": "npm run check --prefix frontend",
     "test": "npm run test --prefix frontend",
     "postinstall": "npm install --prefix frontend"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.2"
   }
 }

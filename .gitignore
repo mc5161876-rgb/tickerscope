@@ -1,0 +1,28 @@
+# secrets
+.env
+.env.*
+
+# data + caches
+data/
+*.log
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# node
+node_modules/
+frontend/dist/
+frontend/node_modules/
+
+# packaging (issue #4)
+release/
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

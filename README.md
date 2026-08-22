@@ -60,7 +60,11 @@ tailscale serve --bg 8790
 npm run dev:app      # backend + Vite + Electron window on the dev URL
 npm run icons:render # regenerate assets/icon.ico + PNGs from assets/tickerscope-mark.svg
 npm run dist:win     # build frontend + icons, then release/TickerScope Setup 0.1.0.exe (NSIS, x64)
+npm run dist:mac     # macOS: release/TickerScope-0.1.0-arm64.dmg + .zip (arm64, unsigned)
 ```
+
+macOS (the Mac Studio, `foundry`) runs the same checkout — setup, packaging, and the
+platform fixes the port needed are in [`docs/MACOS.md`](docs/MACOS.md).
 
 The installer puts `TickerScope.exe` in `%LOCALAPPDATA%\Programs\TickerScope\` with a desktop and
 Start Menu shortcut and an uninstaller. The window loads the app from the **Server address** in
@@ -68,7 +72,8 @@ Start Menu shortcut and an uninstaller. The window loads the app from the **Serv
 
 - **Local mode** (127.0.0.1 / localhost): on launch the shell health-checks `/api/health`; if it fails it
   starts `uv run uvicorn …` itself from the repo path (`repoPath` in the config; defaults to the
-  checkout the shell was started from, then `C:\rex\tickerscope`), shows a "Starting TickerScope
+  checkout the shell was started from, then `C:\rex\tickerscope` on Windows / `~/rex/tickerscope`
+  on macOS), shows a "Starting TickerScope
   server…" splash for up to 20 s, and stops that server on quit. It never touches a server it did not
   start. Local mode needs the repo checkout + `uv` on the machine (Python is not bundled).
 - **Remote mode** (anything else, e.g. `http://geekom:8790` on the tailnet): never spawns; on failure

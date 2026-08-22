@@ -1,5 +1,6 @@
 // Render the TickerScope icon set from the one master SVG (MAR-51):
-//   assets/icon-512.png, assets/icon.ico (16..256), frontend/public/icon-192.png, frontend/public/apple-touch-icon.png
+//   assets/icon-1024.png (macOS), assets/icon-512.png, assets/icon.ico (16..256),
+//   frontend/public/icon-192.png, frontend/public/apple-touch-icon.png
 import sharp from "sharp";
 import pngToIco from "png-to-ico";
 import path from "node:path";
@@ -14,6 +15,8 @@ const render = async (size, file) => {
   await sharp(svg, { density: 384 }).resize(size, size).png().toFile(path.join(root, file));
 };
 
+// macOS: electron-builder renders the .icns from a 1024px master
+await render(1024, "assets/icon-1024.png");
 await render(512, "assets/icon-512.png");
 await render(256, "assets/icon-256.png");
 await render(192, "frontend/public/icon-192.png");
@@ -28,4 +31,4 @@ const icoSizes = [16, 24, 32, 48, 64, 128, 256];
 const icoBuffers = await Promise.all(icoSizes.map((size) => sharp(svg, { density: 384 }).resize(size, size).png().toBuffer()));
 await fs.writeFile(path.join(root, "assets", "icon.ico"), await pngToIco(icoBuffers));
 
-console.log("Rendered TickerScope icons from assets/tickerscope-mark.svg (512/256/192/180 png + ico", icoSizes.join("/"), ")");
+console.log("Rendered TickerScope icons from assets/tickerscope-mark.svg (1024/512/256/192/180 png + ico", icoSizes.join("/"), ")");

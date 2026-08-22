@@ -2,7 +2,7 @@
   "name": "tickerscope",
   "version": "0.1.0",
   "private": true,
-  "description": "TickerScope — type a ticker, get a clean one-page report with plain-English metric explainers.",
+  "description": "TickerScope \u2014 type a ticker, get a clean one-page report with plain-English metric explainers.",
   "author": "Mario Cervantes",
   "license": "UNLICENSED",
   "type": "module",
@@ -19,6 +19,7 @@
     "icons:render": "node scripts/render-icons.mjs",
     "start": "electron .",
     "dist:win": "npm run build && npm run icons:render && electron-builder --win nsis",
+    "dist:mac": "npm run build && npm run icons:render && electron-builder --mac dmg zip",
     "postinstall": "npm install --prefix frontend"
   },
   "devDependencies": {
@@ -30,7 +31,6 @@
   "build": {
     "appId": "com.mario.tickerscope",
     "productName": "TickerScope",
-    "artifactName": "${productName} Setup ${version}.${ext}",
     "directories": {
       "output": "release"
     },
@@ -39,6 +39,7 @@
       "!electron/tests/**",
       "assets/icon.ico",
       "assets/icon-512.png",
+      "assets/icon-1024.png",
       "assets/tickerscope-mark.svg",
       "package.json"
     ],
@@ -51,7 +52,8 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "artifactName": "${productName} Setup ${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -61,6 +63,29 @@
       "createStartMenuShortcut": true,
       "shortcutName": "TickerScope",
       "uninstallDisplayName": "TickerScope"
+    },
+    "mac": {
+      "icon": "assets/icon-1024.png",
+      "category": "public.app-category.finance",
+      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "identity": null
+    },
+    "dmg": {
+      "title": "TickerScope"
     }
   }
 }

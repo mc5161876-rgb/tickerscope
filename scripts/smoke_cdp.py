@@ -1,11 +1,12 @@
-"""Headless-Edge smoke harness over the Chrome DevTools Protocol.
+"""Headless Chromium smoke harness over the Chrome DevTools Protocol.
 
 Usage (server must be running on 127.0.0.1:8790):
     uv run python scripts/smoke_cdp.py                 # screenshots + layout checks
     uv run python scripts/smoke_cdp.py --eval "document.title"
 
 Writes docs/screenshots/*.png. Uses only stdlib + websockets (already a uvicorn dep).
-The Browser pane on this desktop can't reach localhost, so this is the review path.
+The Browser pane can't reach localhost on either machine, so this is the review path.
+Drives whichever Chromium is installed: Edge on Windows, Chrome or Edge on macOS.
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -34,17 +36,38 @@ ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "docs" / "screenshots"
 BASE = os.environ.get("TICKERSCOPE_BASE", "http://127.0.0.1:8790")
 PORT = 9333
-EDGE_CANDIDATES = [
-    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-]
+BROWSER_CANDIDATES = {
+    "win32": [
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    ],
+    "darwin": [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    ],
+}
 
 
-def find_edge() -> str:
-    for p in EDGE_CANDIDATES:
+def find_browser() -> str:
+    """First installed Chromium for this platform (override with TICKERSCOPE_BROWSER)."""
+    override = os.environ.get("TICKERSCOPE_BROWSER")
+    if override:
+        if not Path(override).exists():
+            raise SystemExit(f"TICKERSCOPE_BROWSER does not exist: {override}")
+        return override
+    candidates = BROWSER_CANDIDATES.get(sys.platform, BROWSER_CANDIDATES["darwin"])
+    for p in candidates:
         if Path(p).exists():
             return p
-    raise SystemExit("msedge.exe not found")
+    raise SystemExit(
+        "no Chromium found; install Chrome or Edge, or set TICKERSCOPE_BROWSER to its binary"
+    )
+
+
+# Back-compat for callers that still import the old name.
+find_edge = find_browser
 
 
 class CDP:
@@ -482,7 +505,8 @@ async def main(argv: list[str]) -> int:
     args = ap.parse_args(argv)
     SHOTS.mkdir(parents=True, exist_ok=True)
 
-    prof = Path(os.environ.get("TEMP", ".")) / "tickerscope-cdp-profile"
+    # TEMP is a Windows-ism; gettempdir() picks the right place on both, never the repo.
+    prof = Path(tempfile.gettempdir()) / "tickerscope-cdp-profile"
     proc = subprocess.Popen(
         [
             find_edge(),

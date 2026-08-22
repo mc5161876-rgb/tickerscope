@@ -42,10 +42,17 @@ async function loadConfig() {
   configFile = path.join(app.getPath("userData"), "config.json");
   config = await readConfig(configFile);
   if (!config.repoPath) {
-    // dev checkout: this file lives at <repo>/electron/main.mjs; packaged: fall back to the known desktop path
+    // dev checkout: this file lives at <repo>/electron/main.mjs; packaged: fall back to the
+    // conventional checkout for this machine (C:\rex on Windows, ~/rex on macOS/Linux).
     const devRepo = path.resolve(__dirname, "..");
-    if (existsSync(path.join(devRepo, "pyproject.toml"))) config.repoPath = devRepo;
-    else if (existsSync("C:\\rex\\tickerscope\\pyproject.toml")) config.repoPath = "C:\\rex\\tickerscope";
+    const candidates = [
+      devRepo,
+      ...(process.platform === "win32"
+        ? ["C:\\rex\\tickerscope"]
+        : [path.join(app.getPath("home"), "rex", "tickerscope")]),
+    ];
+    const found = candidates.find((c) => existsSync(path.join(c, "pyproject.toml")));
+    if (found) config.repoPath = found;
   }
   nativeTheme.themeSource = config.theme === "light" ? "light" : "dark";
 }
@@ -68,6 +75,25 @@ async function saveConfig(patch = {}) {
 }
 
 // ------------------------------------------------------------------ local server
+/**
+ * PATH for the spawned server. A Finder- or Dock-launched .app inherits launchd's minimal PATH,
+ * which has neither ~/.local/bin nor Homebrew, so a bare `uv` would not resolve. Prepend the
+ * places uv actually installs itself; a shell-launched app already has them and loses nothing.
+ */
+function spawnPath() {
+  const current = process.env.PATH || "";
+  if (process.platform === "win32") return current;
+  const home = app.getPath("home");
+  const extra = [
+    path.join(home, ".local", "bin"),
+    path.join(home, ".cargo", "bin"),
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+  ];
+  const parts = current.split(path.delimiter).filter(Boolean);
+  return [...extra.filter((d) => !parts.includes(d) && existsSync(d)), ...parts].join(path.delimiter);
+}
+
 function spawnServer() {
   const repo = config.repoPath;
   if (!repo || !existsSync(path.join(repo, "pyproject.toml"))) {
@@ -79,7 +105,7 @@ function spawnServer() {
     cwd,
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env, PYTHONUNBUFFERED: "1" },
+    env: { ...process.env, PATH: spawnPath(), PYTHONUNBUFFERED: "1" },
   });
   child.stdout?.on("data", (d) => log("[api]", String(d).trim()));
   child.stderr?.on("data", (d) => log("[api]", String(d).trim()));

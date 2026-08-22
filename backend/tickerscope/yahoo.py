@@ -398,7 +398,55 @@ def compute_financials(
                 ebitda = _series_points(summed, freq)
         if not ebitda:
             method = None
-    return {"revenue": revenue, "ebitda": ebitda, "ebitda_method": method}
+
+    ocf = _series_points(
+        _row(cashflow, "Operating Cash Flow", "Cash Flow From Continuing Operating Activities"),
+        freq,
+    )
+    # yfinance reports capex as a negative outflow. The chart reads as "cash spent", so flip
+    # the sign here and say so in the card subtitle -- a red bar would imply capex is a loss.
+    capex_row = _row(cashflow, "Capital Expenditure", "Purchase Of PPE")
+    capex = [{**pt, "value": abs(pt["value"])} for pt in _series_points(capex_row, freq)]
+
+    fcf_row = _row(cashflow, "Free Cash Flow")
+    fcf_method: str | None = None
+    fcf: list[dict[str, Any]] = []
+    if fcf_row is not None:
+        fcf_method = "reported"
+        fcf = _series_points(fcf_row, freq)
+    elif ocf and capex:
+        # operating cash flow less capital expenditure, matched period by period
+        spend = {pt["period_end"]: pt["value"] for pt in capex}
+        fcf = [
+            {**pt, "value": pt["value"] - spend[pt["period_end"]]}
+            for pt in ocf
+            if pt["period_end"] in spend
+        ]
+        if fcf:
+            fcf_method = "calculated"
+    if not fcf:
+        fcf_method = None
+
+    net_income = _series_points(
+        _row(
+            income,
+            "Net Income",
+            "Net Income Common Stockholders",
+            "Net Income From Continuing Operations",
+        ),
+        freq,
+    )
+
+    return {
+        "revenue": revenue,
+        "ebitda": ebitda,
+        "ebitda_method": method,
+        "operating_cash_flow": ocf,
+        "free_cash_flow": fcf,
+        "free_cash_flow_method": fcf_method,
+        "capital_expenditure": capex,
+        "net_income": net_income,
+    }
 
 
 def fetch_financials(symbol: str, freq: str) -> dict[str, Any]:

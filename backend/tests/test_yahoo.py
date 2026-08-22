@@ -110,3 +110,57 @@ def test_recorded_aapl_raw_rows_reproduce_reported_ebitda():
     assert out["ebitda_method"] == "reported"
     fixture = load_fixture("AAPL")["financials_annual"]
     assert [p["value"] for p in out["ebitda"]] == [p["value"] for p in fixture["ebitda"]]
+
+
+# ---------------------------------------------------------------- cash-flow series (MAR-56)
+def test_compute_financials_reads_cash_flow_and_net_income():
+    income = _frame(
+        {
+            "Total Revenue": {"2024-12-31": 100.0, "2025-12-31": 120.0},
+            "Net Income": {"2024-12-31": 20.0, "2025-12-31": 25.0},
+        }
+    )
+    cashflow = _frame(
+        {
+            "Operating Cash Flow": {"2024-12-31": 30.0, "2025-12-31": 36.0},
+            "Free Cash Flow": {"2024-12-31": 22.0, "2025-12-31": 27.0},
+            "Capital Expenditure": {"2024-12-31": -8.0, "2025-12-31": -9.0},
+        }
+    )
+    out = compute_financials(income, cashflow, "annual")
+    assert [p["value"] for p in out["operating_cash_flow"]] == [30.0, 36.0]
+    assert [p["value"] for p in out["free_cash_flow"]] == [22.0, 27.0]
+    assert out["free_cash_flow_method"] == "reported"
+    assert [p["value"] for p in out["net_income"]] == [20.0, 25.0]
+
+
+def test_capital_expenditure_is_reported_as_positive_spend():
+    """yfinance reports capex as a negative outflow; the chart shows cash spent."""
+    cashflow = _frame({"Capital Expenditure": {"2024-12-31": -8.0, "2025-12-31": -9.5}})
+    out = compute_financials(_frame({}), cashflow, "annual")
+    assert [p["value"] for p in out["capital_expenditure"]] == [8.0, 9.5]
+
+
+def test_free_cash_flow_falls_back_to_operating_less_capex():
+    cashflow = _frame(
+        {
+            "Operating Cash Flow": {"2024-12-31": 30.0, "2025-12-31": 36.0},
+            "Capital Expenditure": {"2024-12-31": -8.0, "2025-12-31": -9.0},
+        }
+    )
+    out = compute_financials(_frame({}), cashflow, "annual")
+    assert [p["value"] for p in out["free_cash_flow"]] == [22.0, 27.0]
+    assert out["free_cash_flow_method"] == "calculated"
+
+
+def test_free_cash_flow_is_empty_when_neither_source_is_there():
+    out = compute_financials(_frame({}), _frame({"Operating Cash Flow": {"2025-12-31": 36.0}}), "annual")
+    assert out["free_cash_flow"] == []
+    assert out["free_cash_flow_method"] is None
+    assert [p["value"] for p in out["operating_cash_flow"]] == [36.0]
+
+
+def test_cash_flow_series_are_empty_not_missing_when_the_frame_is():
+    out = compute_financials(_frame({}), None, "annual")
+    for key in ("operating_cash_flow", "free_cash_flow", "capital_expenditure", "net_income"):
+        assert out[key] == [], key

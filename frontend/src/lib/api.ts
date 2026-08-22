@@ -73,6 +73,12 @@ export interface FinancialsPayload {
   revenue: PeriodPoint[];
   ebitda: PeriodPoint[];
   ebitda_method: "reported" | "calculated" | null;
+  /** MAR-56 cash-flow + earnings series. yfinance only - SEC backfills revenue/EBITDA, not these. */
+  operating_cash_flow: PeriodPoint[];
+  free_cash_flow: PeriodPoint[];
+  free_cash_flow_method: "reported" | "calculated" | null;
+  capital_expenditure: PeriodPoint[];
+  net_income: PeriodPoint[];
   sec?: { status: SecStatus | null; message?: string | null; cik?: string | null };
   warnings?: string[];
 }

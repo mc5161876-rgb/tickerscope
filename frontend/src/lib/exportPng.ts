@@ -1,7 +1,16 @@
 // Share-card export helpers (MAR-50 AC-9, AC-10): filename builder + DOM node -> PNG (2x).
 import { toPng } from "html-to-image";
 
-export type ChartKey = "price" | "revenue" | "ebitda" | "segments";
+export type ChartKey =
+  | "price"
+  | "revenue"
+  | "ebitda"
+  | "segments"
+  // MAR-56: cash flow & earnings
+  | "ocf"
+  | "fcf"
+  | "capex"
+  | "netincome";
 
 /** `{TICKER}-{chart}-{YYYY-MM-DD}.png` */
 export function exportFilename(ticker: string, chart: ChartKey | string, date: Date = new Date()): string {

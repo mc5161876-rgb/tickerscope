@@ -2,6 +2,32 @@
 
 All notable changes to TickerScope. Dates are the day the work landed in a PR.
 
+## Unreleased — 2026-08-21 (foundry)
+
+### macOS (PR #5, `mac-build`)
+- The same checkout runs and packages on the Mac Studio: `npm run dist:mac` → an arm64 dmg.
+  Five platform fixes, none of which change Windows behaviour. See `docs/MACOS.md`.
+
+### Company logos (MAR-54, PR #6)
+- Real company logos on the ticker header, My Stocks rows, search results, and Recent /
+  My Stocks chips, with the existing letter avatar as the fallback.
+- `GET /api/logo/{symbol}` resolves the company's own domain from the cached profile and
+  fetches its favicon once per **domain**, from public endpoints that need no key or account.
+  Hits are cached on disk for 30 days, misses for 7 — plenty of companies have no usable icon.
+- The route never fetches a profile of its own: a page of search results must not turn into
+  one yfinance call per logo. A company you have not opened yet shows letters until you do.
+
+### Cash flow & earnings charts (MAR-56, PR #6)
+- A new section under Insights: **Operating Cash Flow**, **Capital Expenditure**,
+  **Free Cash Flow**, and **Net Income**, on the same Quarterly | Annually control, each
+  expandable and exportable like the existing charts.
+- Free cash flow is used as reported when the filing gives it, and otherwise calculated as
+  operating cash flow − capital expenditure; the card says which.
+- Capital expenditure is shown as cash *spent* (the source reports it as a negative outflow),
+  because a red "negative" bar would read as a loss.
+- These four are yfinance-only — SEC companyfacts backfills revenue and EBITDA, not these —
+  so they cover about 4–5 years rather than the 10 the revenue chart shows.
+
 ## 0.1.0 — 2026-08-18
 
 The first complete build, delivered as four stacked PRs on the same day (MAR-48 → MAR-51).

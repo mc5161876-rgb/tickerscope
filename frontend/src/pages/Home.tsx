@@ -4,7 +4,8 @@ import { X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Banner } from "../components/Bits";
 import { Mark, Wordmark } from "../components/Mark";
-import { Search, avatarText } from "../components/Search";
+import { CompanyLogo } from "../components/CompanyLogo";
+import { Search } from "../components/Search";
 import { WatchlistTable } from "../components/WatchlistTable";
 import { pushRecent, removeRecent, useRecent } from "../lib/recent";
 import { useQuotes, useWatchlist } from "../lib/watchlist";
@@ -65,7 +66,7 @@ export function Home() {
                   onClick={() => navigate(`/t/${r.ticker}`)}
                   style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0, borderRight: 0 }}
                 >
-                  <span className="avatar">{avatarText(r.ticker)}</span>
+                  <CompanyLogo ticker={r.ticker} name={r.name} />
                   <b>{r.ticker}</b>
                   {r.name && <span className="muted">{r.name}</span>}
                 </button>

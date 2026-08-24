@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { fmtChange, fmtCurrency, fmtDateRelative, fmtPrice, fmtRatio } from "../lib/format";
 import type { QuoteMap, WatchlistItem } from "../lib/watchlist";
 import { Sk } from "./Bits";
-import { avatarText } from "./Search";
+import { CompanyLogo } from "./CompanyLogo";
 
 export function WatchlistTable({
   items,
@@ -89,7 +89,7 @@ export function WatchlistTable({
               <GripVertical size={14} />
             </span>
             <span className="wl-co">
-              <span className="avatar">{avatarText(it.ticker)}</span>
+              <CompanyLogo ticker={it.ticker} name={q?.profile.name ?? q?.profile.short_name} />
               <span className="wl-names">
                 <b>{it.ticker}</b>
                 <span className="muted">

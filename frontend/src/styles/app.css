@@ -376,6 +376,18 @@
   letter-spacing: 0.02em;
   color: var(--accent);
   background: var(--accent-soft);
+  overflow: hidden;
+}
+/* MAR-54: a real logo fills the same circle the letters would have. Most favicons are
+   square art on their own background, so inset them slightly and keep the circle behind. */
+.avatar img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.avatar[data-logo="image"] {
+  background: var(--surface-2, var(--accent-soft));
 }
 .search-empty {
   padding: 14px 16px;
@@ -1696,4 +1708,14 @@
   .wordmark {
     font-size: 26px;
   }
+}
+
+/* MAR-54: logo sits next to the company name in the ticker header */
+.ticker-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ticker-title h1 {
+  margin: 0;
 }

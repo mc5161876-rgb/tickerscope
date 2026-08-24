@@ -8,10 +8,10 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import Body, FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from . import __version__, config, yahoo
+from . import __version__, config, logos, yahoo
 from .cache import DiskCache
 from .metrics import registry
 from .search import SearchIndex
@@ -179,6 +179,11 @@ def create_app(
             "revenue": [],
             "ebitda": [],
             "ebitda_method": None,
+            "operating_cash_flow": [],
+            "free_cash_flow": [],
+            "free_cash_flow_method": None,
+            "capital_expenditure": [],
+            "net_income": [],
         }
         yf_rev = [
             {**p, "source": "yfinance", "method": "as_filed"} for p in base.get("revenue", [])
@@ -194,11 +199,22 @@ def create_app(
         else:
             revenue, ebitda, method = yf_rev, yf_ebitda, base.get("ebitda_method")
         limit = config.SEC_ANNUAL_YEARS if fq == "annual" else config.SEC_QUARTERS
+        # Cash-flow and earnings series are yfinance-only: SEC companyfacts backfills revenue
+        # and EBITDA (MAR-49), not these. Tag the source so the charts say where they came from.
+        cash_keys = ("operating_cash_flow", "free_cash_flow", "capital_expenditure", "net_income")
+        cash_series = {
+            key: [{**pt, "source": "yfinance", "method": "as_filed"} for pt in base.get(key, [])][
+                -limit:
+            ]
+            for key in cash_keys
+        }
         payload = {
             **base,
+            **cash_series,
             "revenue": revenue[-limit:],
             "ebitda": ebitda[-limit:],
             "ebitda_method": method,
+            "free_cash_flow_method": base.get("free_cash_flow_method"),
             "sec": {
                 "status": sec_series.get("status"),
                 "message": sec_series.get("message"),
@@ -208,6 +224,42 @@ def create_app(
         if yf_error is not None:
             payload["warnings"] = ["yfinance unavailable; showing SEC history only"]
         return _json(payload, cache_status)
+
+    @app.get("/api/logo/{symbol}")
+    def logo(symbol: str) -> Response:
+        """Company logo (MAR-54). 404 -> the UI draws its letter avatar instead.
+
+        Reads the website out of the *cached* profile and never fetches one. A row of search
+        results would otherwise fire a yfinance profile call per logo. Every surface that
+        shows a logo has already loaded the company (ticker page) or the batched quotes that
+        warm the same cache (My Stocks), so in practice the entry is there; when it is not,
+        the letter avatar stands in and the logo appears on the next render.
+
+        Staleness does not matter here - a company changes its domain about as often as its
+        name - so an expired entry is read anyway rather than triggering a fetch.
+        """
+        sym = symbol.upper().strip()
+        hit = cache.get("ticker", sym, config.TTL_QUOTE)
+        if hit is None:
+            raise HTTPException(404, f"No cached profile for {sym}")
+        website = (hit.payload.get("profile") or {}).get("website")
+        if not website:
+            raise HTTPException(404, f"No website on file for {sym}")
+        try:
+            found = logos.logo_for_website(website)
+        except Exception:  # noqa: BLE001 - a logo is decoration; never 500 the page over one
+            log.warning("logo lookup failed for %s", sym, exc_info=True)
+            found = None
+        if found is None:
+            raise HTTPException(404, f"No logo for {sym}")
+        return Response(
+            content=found.body,
+            media_type=found.content_type,
+            headers={
+                "Cache-Control": f"public, max-age={logos.TTL_HIT}",
+                "X-Logo-Domain": found.domain,
+            },
+        )
 
     # ------------------------------------------------------------------ watchlist (MAR-50)
     def _wl_payload(items: list[dict[str, Any]]) -> dict[str, Any]:

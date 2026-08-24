@@ -4,10 +4,6 @@ Type a ticker, get a clean one-page report: price, valuation, profitability, cas
 dividends, and three 10-year-style charts — with a click-to-reveal plain-English explainer
 on every number. Personal tool, one user, $0/month data (yfinance + the free SEC ticker list).
 
-Issue tracker: Linear project **TickerScope** (MAR-48 core → MAR-49 SEC history/segments →
-MAR-50 watchlist/fullscreen/export → MAR-51 desktop app). Spec + design direction:
-`G:\My Drive\Aries HQ\Projects\TickerScope\`.
-
 ## Stack
 
 - **Backend** — Python 3.12 via `uv`, FastAPI + uvicorn, `yfinance` (pinned; the only Yahoo
@@ -54,7 +50,7 @@ Phone access on the tailnet (HTTPS with the tailnet cert already enabled on this
 tailscale serve --bg 8790
 ```
 
-## Desktop app (Electron, MAR-51)
+## Desktop app (Electron)
 
 ```powershell
 npm run dev:app      # backend + Vite + Electron window on the dev URL
@@ -116,7 +112,7 @@ AMZN / NFLX / INTC / UNH / JPM.
 | `GET /api/ticker/{symbol}/prices?range=1y\|5y\|10y\|max` | `{points:[{date,close}], sampled}` (6h cache) |
 | `GET /api/ticker/{symbol}/financials?freq=annual\|quarterly` | up to 10 fiscal years / 40 quarters: `{revenue:[{period_end,label,value,source,accession,filed,form,method}], ebitda:[...], ebitda_method, sec:{status}}` — SEC companyfacts wins per period, yfinance fills gaps (marked) |
 | `GET /api/ticker/{symbol}/segments?freq=annual\|quarterly` | Revenue by Segment contract per period: `coverage_state`, `render_mode`, `view`, `rows[]`, `consolidation_bridge[]`, totals, `alternative?`, `message?`, `provenance{form,accession,filed,axis,cik,edgar_url}`, plus `legend`, `resegmentations`, `filings_read` |
-| `GET /api/watchlist` · `PUT /api/watchlist {tickers:[…]}` · `POST/DELETE /api/watchlist/{ticker}` | My Stocks (MAR-50): validated (uppercase, unique, ≤ 100), persisted atomically to `data/watchlist.json` |
+| `GET /api/watchlist` · `PUT /api/watchlist {tickers:[…]}` · `POST/DELETE /api/watchlist/{ticker}` | My Stocks: validated (uppercase, unique, ≤ 100), persisted atomically to `data/watchlist.json` |
 | `GET /api/quotes?symbols=A,B,C` | batched watchlist quotes: one fetcher call for every uncached symbol, 15-min `ticker` cache reused/warmed; unknown symbols → `null` |
 | `GET /api/metrics` | the shared registry |
 
@@ -125,7 +121,7 @@ Unknown ticker → `404 {error:"not_found"}`. Yahoo failure → `503 {error:"dat
 (the UI shows a dismissible banner and keeps the last good payload). Set `TICKERSCOPE_FORCE_FAIL=1`
 to exercise that path locally. `/segments` without `SEC_USER_AGENT` → `503 {status:"not_configured"}`.
 
-### SEC EDGAR (MAR-49)
+### SEC EDGAR
 
 `backend/tickerscope/sec/` — `client.py` (identifying User-Agent, ≤ 8 req/s, durable cache under
 `data/sec-cache/`: immutable `Archives/edgar/data` URLs cached forever, submissions/companyfacts 6h),
@@ -159,7 +155,7 @@ scripts/               dev.mjs · start.ps1 · render-icons.mjs · smoke_cdp.py 
 docs/screenshots/      review screenshots (1280×800, 390×844)
 ```
 
-### My Stocks, fullscreen, share cards (MAR-50)
+### My Stocks, fullscreen, share cards
 
 - Watchlist lives server-side (`data/watchlist.json`, atomic temp+rename) so it survives browsers
   and the Electron shell. Home shows it under the search box; `/my-stocks` is the full-width

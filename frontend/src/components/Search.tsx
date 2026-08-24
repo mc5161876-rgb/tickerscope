@@ -10,6 +10,8 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { api, type SearchResult } from "../lib/api";
+import { avatarText } from "../lib/avatar";
+import { CompanyLogo } from "./CompanyLogo";
 import { looksLikeList } from "../lib/bulkImport";
 import { useRecent } from "../lib/recent";
 import { useWatchlist } from "../lib/watchlist";
@@ -34,9 +36,7 @@ export interface SearchProps {
 
 const TICKER_RE = /^[A-Za-z][A-Za-z0-9.\-]{0,7}$/;
 
-export function avatarText(ticker: string): string {
-  return ticker.replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase();
-}
+export { avatarText };
 
 async function defaultFetcher(q: string, signal: AbortSignal): Promise<SearchResult[]> {
   const res = await api.search(q, signal);
@@ -228,7 +228,7 @@ export function Search({
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => select(r)}
                     >
-                      <span className="avatar">{avatarText(r.ticker)}</span>
+                      <CompanyLogo ticker={r.ticker} name={r.name} />
                       <span className="ticker">{r.ticker}</span>
                       <span className="name">{r.name}</span>
                       <span className="exchange">{r.exchange ?? ""}</span>
@@ -249,7 +249,7 @@ export function Search({
               <div className="search-recent">
                 {recent.map((r) => (
                   <button key={r.ticker} type="button" className="chip" onClick={() => select(r)}>
-                    <span className="avatar">{avatarText(r.ticker)}</span>
+                    <CompanyLogo ticker={r.ticker} name={r.name} size={20} />
                     <b>{r.ticker}</b>
                     {r.name && <span className="muted">{r.name}</span>}
                   </button>
@@ -263,7 +263,7 @@ export function Search({
               <div className="search-recent" data-section="my-stocks">
                 {myStocks.map((s) => (
                   <button key={s.ticker} type="button" className="chip" onClick={() => select({ ticker: s.ticker })}>
-                    <span className="avatar">{avatarText(s.ticker)}</span>
+                    <CompanyLogo ticker={s.ticker} size={20} />
                     <b>{s.ticker}</b>
                   </button>
                 ))}

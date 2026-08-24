@@ -4,10 +4,6 @@ Type a ticker, get a clean one-page report: price, valuation, profitability, cas
 dividends, and three 10-year-style charts — with a click-to-reveal plain-English explainer
 on every number. Personal tool, one user, $0/month data (yfinance + the free SEC ticker list).
 
-Issue tracker: Linear project **TickerScope** (MAR-48 core → MAR-49 SEC history/segments →
-MAR-50 watchlist/fullscreen/export → MAR-51 desktop app). Spec + design direction:
-`G:\My Drive\Aries HQ\Projects\TickerScope\`.
-
 ## Stack
 
 - **Backend** — Python 3.12 via `uv`, FastAPI + uvicorn, `yfinance` (pinned; the only Yahoo
@@ -95,8 +91,8 @@ docs/screenshots/      review screenshots (1280×800, 390×844)
 
 ## Not in this build (see later issues)
 
-Revenue by Segment / SEC 10-year history (MAR-49), My Stocks watchlist + fullscreen charts +
-share-card export (MAR-50), Electron shell + installer (MAR-51). No auth, billing, brokerage,
+Revenue by Segment / SEC 10-year history, My Stocks watchlist + fullscreen charts +
+share-card export, Electron shell + installer. No auth, billing, brokerage,
 alerts, news, screener, or AI commentary — by design.
 
 Data disclaimer: yfinance is unofficial and delayed. Not investment advice.

@@ -1,0 +1,21 @@
+{
+  "name": "tickerscope",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TickerScope — type a ticker, get a clean one-page report with plain-English metric explainers.",
+  "author": "Mario Cervantes",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB -c cyan,magenta \"uv run uvicorn tickerscope.main:app --app-dir backend --host 127.0.0.1 --port 8790 --reload\" \"npm run dev --prefix frontend\"",
+    "dev:api": "uv run uvicorn tickerscope.main:app --app-dir backend --host 127.0.0.1 --port 8790 --reload",
+    "dev:web": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "check": "npm run check --prefix frontend",
+    "test": "npm run test --prefix frontend",
+    "postinstall": "npm install --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

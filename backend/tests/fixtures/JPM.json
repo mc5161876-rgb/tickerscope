@@ -1,0 +1,350 @@
+{
+ "symbol": "JPM",
+ "ticker": {
+  "symbol": "JPM",
+  "profile": {
+   "symbol": "JPM",
+   "name": "JPMorgan Chase & Co.",
+   "short_name": "JP Morgan Chase & Co.",
+   "exchange": "NYSE",
+   "exchange_code": "NYQ",
+   "sector": "Financial Services",
+   "industry": "Banks - Diversified",
+   "description": "JPMorgan Chase & Co. operates as a bank and financial holding company in the United States, rest of North America, Europe, the Middle East, Africa, the Asia Pacific, Latin America, and the Caribbean. It operates in three segments: Consumer & Community Banking, Commercial & Investment Bank, and Asset & Wealth Management. The company offers deposit, investment and lending products, and cash management; mortgage origination and servicing activities; residential mortgages and home equity loans; and credit cards, payment solutions, travel services, merchant offers, lifestyle benefits, auto loans, and leases to consumers and small businesses through bank branches, ATMs, and digital and telephone banking. It also provides investment banking, market-making, financing, custody, and securities products and services; corporate strategy and structure advisory, equity and debt market capital-raising, and loan origination and syndication services; cash and derivative instruments, risk management solutions, prime brokerage, clearing, and research; and fund services, liquidity and trading services, and data solutions products for large corporations, financial institutions, merchants, start-ups, small and midsized companies, local governments, municipalities, nonprofits, and commercial real estate clients. In addition, the company offers multi-asset investment management solutions in equities, fixed income, alternatives, and money market funds to institutional clients and retail investors; retirement products and services, estate planning, lending, deposits, and investment management products to high-net-worth clients; and financial transaction processing. JPMorgan Chase & Co. was founded in 1799 and is headquartered in New York, New York.",
+   "employees": 320560,
+   "city": "New York",
+   "state": "NY",
+   "country": "United States",
+   "website": "https://www.jpmorganchase.com",
+   "currency": "USD",
+   "quote_type": "EQUITY"
+  },
+  "quote": {
+   "price": 360.81,
+   "previous_close": 360.96,
+   "change": -0.1499939,
+   "change_percent": -0.0004155416,
+   "currency": "USD",
+   "market_time": "2026-08-18T17:36:37Z",
+   "market_state": "REGULAR"
+  },
+  "metrics": {
+   "market_cap": 959100157952.0,
+   "enterprise_value": 797426909184.0,
+   "fifty_two_week_range": {
+    "low": 279.1,
+    "high": 366.5
+   },
+   "avg_volume_3m": 8898491,
+   "beta": 0.977,
+   "shares_outstanding": 2658186195,
+   "pe_ttm": 15.452248,
+   "forward_pe": 14.428366,
+   "peg": 1.7654,
+   "price_to_sales": 5.147375,
+   "price_to_book": 2.7127142,
+   "ev_ebitda": null,
+   "ev_revenue": 4.28,
+   "revenue_ttm": 186328006656.0,
+   "revenue_growth": 0.304,
+   "gross_margin": 0.0,
+   "operating_margin": 0.50394,
+   "net_margin": 0.34921002,
+   "ebitda_ttm": null,
+   "net_income_ttm": 63634001920.0,
+   "eps_ttm": 23.35,
+   "forward_eps": 25.00699,
+   "roe": 0.17789,
+   "roa": 0.0136,
+   "operating_cash_flow": -162533998592.0,
+   "free_cash_flow": null,
+   "fcf_yield": null,
+   "total_cash": 1526419030016.0,
+   "total_debt": 1343306989568.0,
+   "debt_to_equity": null,
+   "current_ratio": null,
+   "dividend_yield": 0.0166,
+   "payout_ratio": 0.2571,
+   "next_earnings_date": "2026-10-13",
+   "ex_dividend_date": "2026-07-05"
+  },
+  "as_of": "2026-08-18T17:36:37Z",
+  "fetched_at": "2026-08-18T17:36:47.703545Z"
+ },
+ "prices_1y": {
+  "symbol": "JPM",
+  "range": "1y",
+  "currency": "USD",
+  "points": [
+   {
+    "date": "2026-07-08",
+    "close": 330.62
+   },
+   {
+    "date": "2026-07-09",
+    "close": 335.47
+   },
+   {
+    "date": "2026-07-10",
+    "close": 336.47
+   },
+   {
+    "date": "2026-07-13",
+    "close": 334.53
+   },
+   {
+    "date": "2026-07-14",
+    "close": 342.89
+   },
+   {
+    "date": "2026-07-15",
+    "close": 346.91
+   },
+   {
+    "date": "2026-07-16",
+    "close": 343.15
+   },
+   {
+    "date": "2026-07-17",
+    "close": 341.1
+   },
+   {
+    "date": "2026-07-20",
+    "close": 338.87
+   },
+   {
+    "date": "2026-07-21",
+    "close": 345.23
+   },
+   {
+    "date": "2026-07-22",
+    "close": 348.21
+   },
+   {
+    "date": "2026-07-23",
+    "close": 349.9
+   },
+   {
+    "date": "2026-07-24",
+    "close": 353.21
+   },
+   {
+    "date": "2026-07-27",
+    "close": 356.2
+   },
+   {
+    "date": "2026-07-28",
+    "close": 357.31
+   },
+   {
+    "date": "2026-07-29",
+    "close": 344.71
+   },
+   {
+    "date": "2026-07-30",
+    "close": 350.85
+   },
+   {
+    "date": "2026-07-31",
+    "close": 351.79
+   },
+   {
+    "date": "2026-08-03",
+    "close": 352.64
+   },
+   {
+    "date": "2026-08-04",
+    "close": 357.52
+   },
+   {
+    "date": "2026-08-05",
+    "close": 359.24
+   },
+   {
+    "date": "2026-08-06",
+    "close": 356.3
+   },
+   {
+    "date": "2026-08-07",
+    "close": 357.52
+   },
+   {
+    "date": "2026-08-10",
+    "close": 359.79
+   },
+   {
+    "date": "2026-08-11",
+    "close": 362.04
+   },
+   {
+    "date": "2026-08-12",
+    "close": 365.18
+   },
+   {
+    "date": "2026-08-13",
+    "close": 363.11
+   },
+   {
+    "date": "2026-08-14",
+    "close": 362.84
+   },
+   {
+    "date": "2026-08-17",
+    "close": 360.96
+   },
+   {
+    "date": "2026-08-18",
+    "close": 360.81
+   }
+  ],
+  "sampled": false
+ },
+ "financials_annual": {
+  "symbol": "JPM",
+  "freq": "annual",
+  "currency": "USD",
+  "revenue": [
+   {
+    "period_end": "2022-12-31",
+    "label": "FY2022",
+    "value": 127727000000.0
+   },
+   {
+    "period_end": "2023-12-31",
+    "label": "FY2023",
+    "value": 154952000000.0
+   },
+   {
+    "period_end": "2024-12-31",
+    "label": "FY2024",
+    "value": 169439000000.0
+   },
+   {
+    "period_end": "2025-12-31",
+    "label": "FY2025",
+    "value": 181847000000.0
+   }
+  ],
+  "ebitda": [],
+  "ebitda_method": null
+ },
+ "financials_quarterly": {
+  "symbol": "JPM",
+  "freq": "quarterly",
+  "currency": "USD",
+  "revenue": [
+   {
+    "period_end": "2025-06-30",
+    "label": "Q2 '25",
+    "value": 44882000000.0
+   },
+   {
+    "period_end": "2025-09-30",
+    "label": "Q3 '25",
+    "value": 46430000000.0
+   },
+   {
+    "period_end": "2025-12-31",
+    "label": "Q4 '25",
+    "value": 45796000000.0
+   },
+   {
+    "period_end": "2026-03-31",
+    "label": "Q1 '26",
+    "value": 49833000000.0
+   },
+   {
+    "period_end": "2026-06-30",
+    "label": "Q2 '26",
+    "value": 52852000000.0
+   }
+  ],
+  "ebitda": [],
+  "ebitda_method": null
+ },
+ "raw": {
+  "income_annual": {
+   "Total Revenue": {
+    "2025-12-31": 181847000000.0,
+    "2024-12-31": 169439000000.0,
+    "2023-12-31": 154952000000.0,
+    "2022-12-31": 127727000000.0
+   },
+   "Operating Revenue": {
+    "2025-12-31": 181847000000.0,
+    "2024-12-31": 169439000000.0,
+    "2023-12-31": 154952000000.0,
+    "2022-12-31": 127727000000.0
+   },
+   "Reconciled Depreciation": {
+    "2025-12-31": 8821000000.0,
+    "2024-12-31": 7938000000.0,
+    "2023-12-31": 7512000000.0,
+    "2022-12-31": 7051000000.0
+   }
+  },
+  "cashflow_annual": {
+   "Depreciation And Amortization": {
+    "2025-12-31": 8821000000.0,
+    "2024-12-31": 7938000000.0,
+    "2023-12-31": 7512000000.0,
+    "2022-12-31": 7051000000.0,
+    "2021-12-31": null
+   },
+   "Depreciation Amortization Depletion": {
+    "2025-12-31": 8821000000.0,
+    "2024-12-31": 7938000000.0,
+    "2023-12-31": 7512000000.0,
+    "2022-12-31": 7051000000.0,
+    "2021-12-31": null
+   }
+  },
+  "income_quarterly": {
+   "Total Revenue": {
+    "2026-06-30": 52852000000.0,
+    "2026-03-31": 49833000000.0,
+    "2025-12-31": 45796000000.0,
+    "2025-09-30": 46430000000.0,
+    "2025-06-30": 44882000000.0,
+    "2025-03-31": null,
+    "2024-12-31": null
+   },
+   "Operating Revenue": {
+    "2026-06-30": 52852000000.0,
+    "2026-03-31": 49833000000.0,
+    "2025-12-31": 45796000000.0,
+    "2025-09-30": 46430000000.0,
+    "2025-06-30": 44882000000.0,
+    "2025-03-31": null,
+    "2024-12-31": null
+   },
+   "Reconciled Depreciation": {
+    "2026-06-30": 2317000000.0,
+    "2026-03-31": 2364000000.0,
+    "2025-12-31": 2312000000.0,
+    "2025-09-30": 2269000000.0,
+    "2025-06-30": 2210000000.0,
+    "2025-03-31": null,
+    "2024-12-31": null
+   }
+  },
+  "cashflow_quarterly": {
+   "Depreciation And Amortization": {
+    "2026-06-30": 2317000000.0,
+    "2026-03-31": 2364000000.0,
+    "2025-12-31": 2312000000.0,
+    "2025-09-30": 2269000000.0,
+    "2025-06-30": 2210000000.0,
+    "2024-12-31": null
+   },
+   "Depreciation Amortization Depletion": {
+    "2026-06-30": 2317000000.0,
+    "2026-03-31": 2364000000.0,
+    "2025-12-31": 2312000000.0,
+    "2025-09-30": 2269000000.0,
+    "2025-06-30": 2210000000.0,
+    "2024-12-31": null
+   }
+  }
+ }
+}

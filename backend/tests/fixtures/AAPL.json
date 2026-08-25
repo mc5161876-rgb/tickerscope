@@ -1,0 +1,436 @@
+{
+ "symbol": "AAPL",
+ "ticker": {
+  "symbol": "AAPL",
+  "profile": {
+   "symbol": "AAPL",
+   "name": "Apple Inc.",
+   "short_name": "Apple Inc.",
+   "exchange": "NasdaqGS",
+   "exchange_code": "NMS",
+   "sector": "Technology",
+   "industry": "Consumer Electronics",
+   "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide. The company offers iPhone, a line of smartphones; Mac, a line of personal computers; iPad, a line of multi-purpose tablets; and wearables, home, and accessories comprising AirPods, Apple Vision Pro, Apple TV, Apple Watch, Beats products, and HomePod, as well as Apple branded and third-party accessories. It also provides AppleCare support and cloud services; and operates various platforms, including the App Store that allows customers to discover and download applications and digital content, such as books, music, video, games, and podcasts, as well as advertising services include third-party licensing arrangements and its own advertising platforms. In addition, the company offers various subscription-based services, such as Apple Arcade, a game subscription service; Apple Fitness+, a personalized fitness service; Apple Music, which offers users a curated listening experience with on-demand radio stations; Apple News+, a subscription news and magazine service; Apple TV, which offers original content and live sports; Apple Card, a co-branded credit card; and Apple Pay, a cashless payment service, as well as licenses its intellectual property. The company serves consumers, and small and mid-sized businesses; and the education, enterprise, and government markets. It distributes third-party applications for its products through the App Store. The company also sells its products through its retail and online stores, and direct sales force; and third-party cellular network carriers and resellers. The company was formerly known as Apple Computer, Inc. and changed its name to Apple Inc. in January 2007. Apple Inc. was founded in 1976 and is headquartered in Cupertino, California.",
+   "employees": 150000,
+   "city": "Cupertino",
+   "state": "CA",
+   "country": "United States",
+   "website": "https://www.apple.com",
+   "currency": "USD",
+   "quote_type": "EQUITY"
+  },
+  "quote": {
+   "price": 310.24,
+   "previous_close": 305.59,
+   "change": 4.649994,
+   "change_percent": 0.015216447,
+   "currency": "USD",
+   "market_time": "2026-08-18T17:36:43Z",
+   "market_state": "REGULAR"
+  },
+  "metrics": {
+   "market_cap": 4527698214912.0,
+   "enterprise_value": 4481780547584.0,
+   "fifty_two_week_range": {
+    "low": 223.78,
+    "high": 344.57
+   },
+   "avg_volume_3m": 56250820,
+   "beta": 1.086,
+   "shares_outstanding": 14594180000,
+   "pe_ttm": 35.618828,
+   "forward_pe": 32.630356,
+   "peg": 2.464,
+   "price_to_sales": 9.698961,
+   "price_to_book": 42.152172,
+   "ev_ebitda": 26.684,
+   "ev_revenue": 9.601,
+   "revenue_ttm": 466822987776.0,
+   "revenue_growth": 0.164,
+   "gross_margin": 0.48653,
+   "operating_margin": 0.32623002,
+   "net_margin": 0.27618998,
+   "ebitda_ttm": 167959003136.0,
+   "net_income_ttm": 128929996800.0,
+   "eps_ttm": 8.71,
+   "forward_eps": 9.50771,
+   "roe": 1.4875101,
+   "roa": 0.27082002,
+   "operating_cash_flow": 146723995648.0,
+   "free_cash_flow": 107721875456.0,
+   "fcf_yield": 0.023791752529180806,
+   "total_cash": 62399000576.0,
+   "total_debt": 84343996416.0,
+   "debt_to_equity": 0.78445,
+   "current_ratio": 1.003,
+   "dividend_yield": 0.0034999999999999996,
+   "payout_ratio": 0.1204,
+   "next_earnings_date": "2026-10-29",
+   "ex_dividend_date": "2026-08-09"
+  },
+  "as_of": "2026-08-18T17:36:43Z",
+  "fetched_at": "2026-08-18T17:36:45.212043Z"
+ },
+ "prices_1y": {
+  "symbol": "AAPL",
+  "range": "1y",
+  "currency": "USD",
+  "points": [
+   {
+    "date": "2026-07-08",
+    "close": 313.12
+   },
+   {
+    "date": "2026-07-09",
+    "close": 315.9475
+   },
+   {
+    "date": "2026-07-10",
+    "close": 315.0483
+   },
+   {
+    "date": "2026-07-13",
+    "close": 317.0366
+   },
+   {
+    "date": "2026-07-14",
+    "close": 314.5887
+   },
+   {
+    "date": "2026-07-15",
+    "close": 327.2178
+   },
+   {
+    "date": "2026-07-16",
+    "close": 332.9728
+   },
+   {
+    "date": "2026-07-17",
+    "close": 333.4524
+   },
+   {
+    "date": "2026-07-20",
+    "close": 326.3086
+   },
+   {
+    "date": "2026-07-21",
+    "close": 327.4576
+   },
+   {
+    "date": "2026-07-22",
+    "close": 325.6092
+   },
+   {
+    "date": "2026-07-23",
+    "close": 321.3828
+   },
+   {
+    "date": "2026-07-24",
+    "close": 332.733
+   },
+   {
+    "date": "2026-07-27",
+    "close": 336.6197
+   },
+   {
+    "date": "2026-07-28",
+    "close": 339.7869
+   },
+   {
+    "date": "2026-07-29",
+    "close": 337.8986
+   },
+   {
+    "date": "2026-07-30",
+    "close": 333.1427
+   },
+   {
+    "date": "2026-07-31",
+    "close": 308.6438
+   },
+   {
+    "date": "2026-08-03",
+    "close": 303.1586
+   },
+   {
+    "date": "2026-08-04",
+    "close": 309.1134
+   },
+   {
+    "date": "2026-08-05",
+    "close": 310.732
+   },
+   {
+    "date": "2026-08-06",
+    "close": 312.1408
+   },
+   {
+    "date": "2026-08-07",
+    "close": 313.06
+   },
+   {
+    "date": "2026-08-10",
+    "close": 308.26
+   },
+   {
+    "date": "2026-08-11",
+    "close": 304.91
+   },
+   {
+    "date": "2026-08-12",
+    "close": 302.25
+   },
+   {
+    "date": "2026-08-13",
+    "close": 305.26
+   },
+   {
+    "date": "2026-08-14",
+    "close": 305.93
+   },
+   {
+    "date": "2026-08-17",
+    "close": 305.59
+   },
+   {
+    "date": "2026-08-18",
+    "close": 310.24
+   }
+  ],
+  "sampled": false
+ },
+ "financials_annual": {
+  "symbol": "AAPL",
+  "freq": "annual",
+  "currency": "USD",
+  "revenue": [
+   {
+    "period_end": "2022-09-30",
+    "label": "FY2022",
+    "value": 394328000000.0
+   },
+   {
+    "period_end": "2023-09-30",
+    "label": "FY2023",
+    "value": 383285000000.0
+   },
+   {
+    "period_end": "2024-09-30",
+    "label": "FY2024",
+    "value": 391035000000.0
+   },
+   {
+    "period_end": "2025-09-30",
+    "label": "FY2025",
+    "value": 416161000000.0
+   }
+  ],
+  "ebitda": [
+   {
+    "period_end": "2022-09-30",
+    "label": "FY2022",
+    "value": 130541000000.0
+   },
+   {
+    "period_end": "2023-09-30",
+    "label": "FY2023",
+    "value": 125820000000.0
+   },
+   {
+    "period_end": "2024-09-30",
+    "label": "FY2024",
+    "value": 134661000000.0
+   },
+   {
+    "period_end": "2025-09-30",
+    "label": "FY2025",
+    "value": 144748000000.0
+   }
+  ],
+  "ebitda_method": "reported"
+ },
+ "financials_quarterly": {
+  "symbol": "AAPL",
+  "freq": "quarterly",
+  "currency": "USD",
+  "revenue": [
+   {
+    "period_end": "2025-06-30",
+    "label": "Q2 '25",
+    "value": 94036000000.0
+   },
+   {
+    "period_end": "2025-09-30",
+    "label": "Q3 '25",
+    "value": 102466000000.0
+   },
+   {
+    "period_end": "2025-12-31",
+    "label": "Q4 '25",
+    "value": 143756000000.0
+   },
+   {
+    "period_end": "2026-03-31",
+    "label": "Q1 '26",
+    "value": 111184000000.0
+   },
+   {
+    "period_end": "2026-06-30",
+    "label": "Q2 '26",
+    "value": 109417000000.0
+   }
+  ],
+  "ebitda": [
+   {
+    "period_end": "2025-06-30",
+    "label": "Q2 '25",
+    "value": 31032000000.0
+   },
+   {
+    "period_end": "2025-09-30",
+    "label": "Q3 '25",
+    "value": 35554000000.0
+   },
+   {
+    "period_end": "2025-12-31",
+    "label": "Q4 '25",
+    "value": 54066000000.0
+   },
+   {
+    "period_end": "2026-03-31",
+    "label": "Q1 '26",
+    "value": 39324000000.0
+   },
+   {
+    "period_end": "2026-06-30",
+    "label": "Q2 '26",
+    "value": 39015000000.0
+   }
+  ],
+  "ebitda_method": "reported"
+ },
+ "raw": {
+  "income_annual": {
+   "Total Revenue": {
+    "2025-09-30": 416161000000.0,
+    "2024-09-30": 391035000000.0,
+    "2023-09-30": 383285000000.0,
+    "2022-09-30": 394328000000.0,
+    "2021-09-30": null
+   },
+   "Operating Revenue": {
+    "2025-09-30": 416161000000.0,
+    "2024-09-30": 391035000000.0,
+    "2023-09-30": 383285000000.0,
+    "2022-09-30": 394328000000.0,
+    "2021-09-30": null
+   },
+   "EBITDA": {
+    "2025-09-30": 144748000000.0,
+    "2024-09-30": 134661000000.0,
+    "2023-09-30": 125820000000.0,
+    "2022-09-30": 130541000000.0,
+    "2021-09-30": null
+   },
+   "Operating Income": {
+    "2025-09-30": 133050000000.0,
+    "2024-09-30": 123216000000.0,
+    "2023-09-30": 114301000000.0,
+    "2022-09-30": 119437000000.0,
+    "2021-09-30": null
+   },
+   "Total Operating Income As Reported": {
+    "2025-09-30": 133050000000.0,
+    "2024-09-30": 123216000000.0,
+    "2023-09-30": 114301000000.0,
+    "2022-09-30": 119437000000.0,
+    "2021-09-30": null
+   },
+   "Reconciled Depreciation": {
+    "2025-09-30": 11698000000.0,
+    "2024-09-30": 11445000000.0,
+    "2023-09-30": 11519000000.0,
+    "2022-09-30": 11104000000.0,
+    "2021-09-30": null
+   }
+  },
+  "cashflow_annual": {
+   "Depreciation And Amortization": {
+    "2025-09-30": 11698000000.0,
+    "2024-09-30": 11445000000.0,
+    "2023-09-30": 11519000000.0,
+    "2022-09-30": 11104000000.0,
+    "2021-09-30": null
+   },
+   "Depreciation Amortization Depletion": {
+    "2025-09-30": 11698000000.0,
+    "2024-09-30": 11445000000.0,
+    "2023-09-30": 11519000000.0,
+    "2022-09-30": 11104000000.0,
+    "2021-09-30": null
+   }
+  },
+  "income_quarterly": {
+   "Total Revenue": {
+    "2026-06-30": 109417000000.0,
+    "2026-03-31": 111184000000.0,
+    "2025-12-31": 143756000000.0,
+    "2025-09-30": 102466000000.0,
+    "2025-06-30": 94036000000.0
+   },
+   "Operating Revenue": {
+    "2026-06-30": 109417000000.0,
+    "2026-03-31": 111184000000.0,
+    "2025-12-31": 143756000000.0,
+    "2025-09-30": 102466000000.0,
+    "2025-06-30": 94036000000.0
+   },
+   "EBITDA": {
+    "2026-06-30": 39015000000.0,
+    "2026-03-31": 39324000000.0,
+    "2025-12-31": 54066000000.0,
+    "2025-09-30": 35554000000.0,
+    "2025-06-30": 31032000000.0
+   },
+   "Operating Income": {
+    "2026-06-30": 35695000000.0,
+    "2026-03-31": 35885000000.0,
+    "2025-12-31": 50852000000.0,
+    "2025-09-30": 32427000000.0,
+    "2025-06-30": 28202000000.0
+   },
+   "Total Operating Income As Reported": {
+    "2026-06-30": 35695000000.0,
+    "2026-03-31": 35885000000.0,
+    "2025-12-31": 50852000000.0,
+    "2025-09-30": 32427000000.0,
+    "2025-06-30": 28202000000.0
+   },
+   "Reconciled Depreciation": {
+    "2026-06-30": 3320000000.0,
+    "2026-03-31": 3439000000.0,
+    "2025-12-31": 3214000000.0,
+    "2025-09-30": 3127000000.0,
+    "2025-06-30": 2830000000.0
+   }
+  },
+  "cashflow_quarterly": {
+   "Depreciation And Amortization": {
+    "2026-06-30": 3320000000.0,
+    "2026-03-31": 3439000000.0,
+    "2025-12-31": 3214000000.0,
+    "2025-09-30": 3127000000.0,
+    "2025-06-30": 2830000000.0,
+    "2025-03-31": null
+   },
+   "Depreciation Amortization Depletion": {
+    "2026-06-30": 3320000000.0,
+    "2026-03-31": 3439000000.0,
+    "2025-12-31": 3214000000.0,
+    "2025-09-30": 3127000000.0,
+    "2025-06-30": 2830000000.0,
+    "2025-03-31": null
+   }
+  }
+ }
+}

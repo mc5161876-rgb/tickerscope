@@ -1,0 +1,436 @@
+{
+ "symbol": "NVDA",
+ "ticker": {
+  "symbol": "NVDA",
+  "profile": {
+   "symbol": "NVDA",
+   "name": "NVIDIA Corporation",
+   "short_name": "NVIDIA Corporation",
+   "exchange": "NasdaqGS",
+   "exchange_code": "NMS",
+   "sector": "Technology",
+   "industry": "Semiconductors",
+   "description": "NVIDIA Corporation operates as a data center scale AI infrastructure company in the United States, Taiwan, China, Hong Kong, Europe, and internationally. It operates through Compute & Networking, and Graphics segments. The Compute & Networking segment provides data center accelerated computing and networking platforms and artificial intelligence solutions and software, and automotive platforms and autonomous and electric vehicle solutions, including software. The Graphics segment offers GeForce GPUs for gaming and PCs; Quadro/NVIDIA RTX GPUs for enterprise workstation graphics. The company's products are used in gaming, professional visualization, data center, and automotive markets. It sells its products to original equipment manufacturers, original device manufacturers, system integrators and distributors, independent software vendors, cloud service providers, add-in board manufacturers, distributors, automotive manufacturers and tier-1 automotive suppliers, and other ecosystem participants. NVIDIA Corporation was incorporated in 1993 and is headquartered in Santa Clara, California.",
+   "employees": 42000,
+   "city": "Santa Clara",
+   "state": "CA",
+   "country": "United States",
+   "website": "https://www.nvidia.com",
+   "currency": "USD",
+   "quote_type": "EQUITY"
+  },
+  "quote": {
+   "price": 220.24,
+   "previous_close": 225.01,
+   "change": -4.779999,
+   "change_percent": -0.02124255,
+   "currency": "USD",
+   "market_time": "2026-08-18T17:36:46Z",
+   "market_state": "REGULAR"
+  },
+  "metrics": {
+   "market_cap": 5334190522368.0,
+   "enterprise_value": 5404883943424.0,
+   "fifty_two_week_range": {
+    "low": 164.07,
+    "high": 236.54
+   },
+   "avg_volume_3m": 145128235,
+   "beta": 2.215,
+   "shares_outstanding": 24221000000,
+   "pe_ttm": 33.72588,
+   "forward_pe": 17.1599,
+   "peg": 0.6197,
+   "price_to_sales": 21.043877,
+   "price_to_book": 27.289963,
+   "ev_ebitda": 32.655,
+   "ev_revenue": 21.322,
+   "revenue_ttm": 253491003392.0,
+   "revenue_growth": 0.852,
+   "gross_margin": 0.74144995,
+   "operating_margin": 0.65596,
+   "net_margin": 0.62966,
+   "ebitda_ttm": 165514002432.0,
+   "net_income_ttm": 159612993536.0,
+   "eps_ttm": 6.53,
+   "forward_eps": 12.83399,
+   "roe": 1.14288,
+   "roa": 0.52727,
+   "operating_cash_flow": 125648003072.0,
+   "free_cash_flow": 46335873024.0,
+   "fcf_yield": 0.00868658005927958,
+   "total_cash": 53171998720.0,
+   "total_debt": 12814000128.0,
+   "debt_to_equity": 0.06555,
+   "current_ratio": 3.441,
+   "dividend_yield": 0.0044,
+   "payout_ratio": 0.0061000003,
+   "next_earnings_date": "2026-08-26",
+   "ex_dividend_date": "2026-06-03"
+  },
+  "as_of": "2026-08-18T17:36:46Z",
+  "fetched_at": "2026-08-18T17:36:46.441883Z"
+ },
+ "prices_1y": {
+  "symbol": "NVDA",
+  "range": "1y",
+  "currency": "USD",
+  "points": [
+   {
+    "date": "2026-07-08",
+    "close": 204.12
+   },
+   {
+    "date": "2026-07-09",
+    "close": 202.78
+   },
+   {
+    "date": "2026-07-10",
+    "close": 210.96
+   },
+   {
+    "date": "2026-07-13",
+    "close": 203.53
+   },
+   {
+    "date": "2026-07-14",
+    "close": 211.8
+   },
+   {
+    "date": "2026-07-15",
+    "close": 212.5
+   },
+   {
+    "date": "2026-07-16",
+    "close": 207.4
+   },
+   {
+    "date": "2026-07-17",
+    "close": 202.81
+   },
+   {
+    "date": "2026-07-20",
+    "close": 203.28
+   },
+   {
+    "date": "2026-07-21",
+    "close": 207.29
+   },
+   {
+    "date": "2026-07-22",
+    "close": 212.06
+   },
+   {
+    "date": "2026-07-23",
+    "close": 208.76
+   },
+   {
+    "date": "2026-07-24",
+    "close": 206.84
+   },
+   {
+    "date": "2026-07-27",
+    "close": 196.51
+   },
+   {
+    "date": "2026-07-28",
+    "close": 197.01
+   },
+   {
+    "date": "2026-07-29",
+    "close": 190.01
+   },
+   {
+    "date": "2026-07-30",
+    "close": 195.04
+   },
+   {
+    "date": "2026-07-31",
+    "close": 200.75
+   },
+   {
+    "date": "2026-08-03",
+    "close": 206.64
+   },
+   {
+    "date": "2026-08-04",
+    "close": 211.94
+   },
+   {
+    "date": "2026-08-05",
+    "close": 219.22
+   },
+   {
+    "date": "2026-08-06",
+    "close": 218.99
+   },
+   {
+    "date": "2026-08-07",
+    "close": 223.96
+   },
+   {
+    "date": "2026-08-10",
+    "close": 217.55
+   },
+   {
+    "date": "2026-08-11",
+    "close": 217.5
+   },
+   {
+    "date": "2026-08-12",
+    "close": 224.09
+   },
+   {
+    "date": "2026-08-13",
+    "close": 225.3
+   },
+   {
+    "date": "2026-08-14",
+    "close": 225.16
+   },
+   {
+    "date": "2026-08-17",
+    "close": 225.01
+   },
+   {
+    "date": "2026-08-18",
+    "close": 220.26
+   }
+  ],
+  "sampled": false
+ },
+ "financials_annual": {
+  "symbol": "NVDA",
+  "freq": "annual",
+  "currency": "USD",
+  "revenue": [
+   {
+    "period_end": "2023-01-31",
+    "label": "FY2023",
+    "value": 26974000000.0
+   },
+   {
+    "period_end": "2024-01-31",
+    "label": "FY2024",
+    "value": 60922000000.0
+   },
+   {
+    "period_end": "2025-01-31",
+    "label": "FY2025",
+    "value": 130497000000.0
+   },
+   {
+    "period_end": "2026-01-31",
+    "label": "FY2026",
+    "value": 215938000000.0
+   }
+  ],
+  "ebitda": [
+   {
+    "period_end": "2023-01-31",
+    "label": "FY2023",
+    "value": 5986000000.0
+   },
+   {
+    "period_end": "2024-01-31",
+    "label": "FY2024",
+    "value": 35583000000.0
+   },
+   {
+    "period_end": "2025-01-31",
+    "label": "FY2025",
+    "value": 86137000000.0
+   },
+   {
+    "period_end": "2026-01-31",
+    "label": "FY2026",
+    "value": 144552000000.0
+   }
+  ],
+  "ebitda_method": "reported"
+ },
+ "financials_quarterly": {
+  "symbol": "NVDA",
+  "freq": "quarterly",
+  "currency": "USD",
+  "revenue": [
+   {
+    "period_end": "2025-04-30",
+    "label": "Q2 '25",
+    "value": 44062000000.0
+   },
+   {
+    "period_end": "2025-07-31",
+    "label": "Q3 '25",
+    "value": 46743000000.0
+   },
+   {
+    "period_end": "2025-10-31",
+    "label": "Q4 '25",
+    "value": 57006000000.0
+   },
+   {
+    "period_end": "2026-01-31",
+    "label": "Q1 '26",
+    "value": 68127000000.0
+   },
+   {
+    "period_end": "2026-04-30",
+    "label": "Q2 '26",
+    "value": 81615000000.0
+   }
+  ],
+  "ebitda": [
+   {
+    "period_end": "2025-04-30",
+    "label": "Q2 '25",
+    "value": 22584000000.0
+   },
+   {
+    "period_end": "2025-07-31",
+    "label": "Q3 '25",
+    "value": 31937000000.0
+   },
+   {
+    "period_end": "2025-10-31",
+    "label": "Q4 '25",
+    "value": 38748000000.0
+   },
+   {
+    "period_end": "2026-01-31",
+    "label": "Q1 '26",
+    "value": 51283000000.0
+   },
+   {
+    "period_end": "2026-04-30",
+    "label": "Q2 '26",
+    "value": 71002000000.0
+   }
+  ],
+  "ebitda_method": "reported"
+ },
+ "raw": {
+  "income_annual": {
+   "Total Revenue": {
+    "2026-01-31": 215938000000.0,
+    "2025-01-31": 130497000000.0,
+    "2024-01-31": 60922000000.0,
+    "2023-01-31": 26974000000.0,
+    "2022-01-31": null
+   },
+   "Operating Revenue": {
+    "2026-01-31": 215938000000.0,
+    "2025-01-31": 130497000000.0,
+    "2024-01-31": 60922000000.0,
+    "2023-01-31": 26974000000.0,
+    "2022-01-31": null
+   },
+   "EBITDA": {
+    "2026-01-31": 144552000000.0,
+    "2025-01-31": 86137000000.0,
+    "2024-01-31": 35583000000.0,
+    "2023-01-31": 5986000000.0,
+    "2022-01-31": null
+   },
+   "Operating Income": {
+    "2026-01-31": 130387000000.0,
+    "2025-01-31": 81453000000.0,
+    "2024-01-31": 32972000000.0,
+    "2023-01-31": 5577000000.0,
+    "2022-01-31": null
+   },
+   "Total Operating Income As Reported": {
+    "2026-01-31": 130387000000.0,
+    "2025-01-31": 81453000000.0,
+    "2024-01-31": 32972000000.0,
+    "2023-01-31": 4224000000.0,
+    "2022-01-31": null
+   },
+   "Reconciled Depreciation": {
+    "2026-01-31": 2843000000.0,
+    "2025-01-31": 1864000000.0,
+    "2024-01-31": 1508000000.0,
+    "2023-01-31": 1543000000.0,
+    "2022-01-31": null
+   }
+  },
+  "cashflow_annual": {
+   "Depreciation And Amortization": {
+    "2026-01-31": 2843000000.0,
+    "2025-01-31": 1864000000.0,
+    "2024-01-31": 1508000000.0,
+    "2023-01-31": 1543000000.0,
+    "2022-01-31": null
+   },
+   "Depreciation Amortization Depletion": {
+    "2026-01-31": 2843000000.0,
+    "2025-01-31": 1864000000.0,
+    "2024-01-31": 1508000000.0,
+    "2023-01-31": 1543000000.0,
+    "2022-01-31": null
+   }
+  },
+  "income_quarterly": {
+   "Total Revenue": {
+    "2026-04-30": 81615000000.0,
+    "2026-01-31": 68127000000.0,
+    "2025-10-31": 57006000000.0,
+    "2025-07-31": 46743000000.0,
+    "2025-04-30": 44062000000.0
+   },
+   "Operating Revenue": {
+    "2026-04-30": 81615000000.0,
+    "2026-01-31": 68127000000.0,
+    "2025-10-31": 57006000000.0,
+    "2025-07-31": 46743000000.0,
+    "2025-04-30": 44062000000.0
+   },
+   "EBITDA": {
+    "2026-04-30": 71002000000.0,
+    "2026-01-31": 51283000000.0,
+    "2025-10-31": 38748000000.0,
+    "2025-07-31": 31937000000.0,
+    "2025-04-30": 22584000000.0
+   },
+   "Operating Income": {
+    "2026-04-30": 53536000000.0,
+    "2026-01-31": 44299000000.0,
+    "2025-10-31": 36010000000.0,
+    "2025-07-31": 28440000000.0,
+    "2025-04-30": 21638000000.0
+   },
+   "Total Operating Income As Reported": {
+    "2026-04-30": 53536000000.0,
+    "2026-01-31": 44299000000.0,
+    "2025-10-31": 36010000000.0,
+    "2025-07-31": 28440000000.0,
+    "2025-04-30": 21638000000.0
+   },
+   "Reconciled Depreciation": {
+    "2026-04-30": 997000000.0,
+    "2026-01-31": 812000000.0,
+    "2025-10-31": 751000000.0,
+    "2025-07-31": 669000000.0,
+    "2025-04-30": 611000000.0
+   }
+  },
+  "cashflow_quarterly": {
+   "Depreciation And Amortization": {
+    "2026-04-30": 997000000.0,
+    "2026-01-31": 812000000.0,
+    "2025-10-31": 751000000.0,
+    "2025-07-31": 669000000.0,
+    "2025-04-30": 611000000.0,
+    "2025-01-31": null
+   },
+   "Depreciation Amortization Depletion": {
+    "2026-04-30": 997000000.0,
+    "2026-01-31": 812000000.0,
+    "2025-10-31": 751000000.0,
+    "2025-07-31": 669000000.0,
+    "2025-04-30": 611000000.0,
+    "2025-01-31": null
+   }
+  }
+ }
+}
